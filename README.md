@@ -232,6 +232,13 @@ https://<你的用户名>.github.io/<仓库名>/
 [`astro.config.mjs`](astro.config.mjs) 会自动推导出子路径并让所有站内链接带上它。
 （实测过：Astro 自己**不会**改写手写的 `href`，所以站内链接全部经过 [`src/lib/paths.ts`](src/lib/paths.ts) 的 `withBase()`。）
 
+> **关于 action 版本维护**：GitHub 会定期淘汰旧的 Node 运行时。以后如果在 Actions 页面看到
+> `Node.js XX is deprecated. The following actions ...` 的警告，说明 workflow 里某个 action
+> 的版本旧了 —— 去对应仓库看最新 release，把主版本号升上去即可。
+>
+> 注意这条警告和 `setup-node` 的 `node-version` 是**两件事**：`node-version` 决定"构建项目"
+> 用哪个 Node（当前是 24）；而警告说的是每个 action **自身内置**的那份运行时。
+
 ### 换到自己的域名
 
 买了域名之后：

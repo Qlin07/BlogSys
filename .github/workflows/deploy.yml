@@ -3,6 +3,12 @@
 # 首次使用前需要做一次手动设置（只需一次）：
 #   仓库 Settings → Pages → Build and deployment → Source 选 "GitHub Actions"
 # 不做这一步，下面"配置 Pages"之后的步骤会失败并提示 Pages 未启用。
+#
+# 关于 action 版本：下面每个 action 自身也打包了一份 Node 运行时。
+# Node 20 已被弃用并会从 runner 上移除，所以要用声明 Node 24 的版本，
+# 否则会收到 "Node.js 20 is deprecated" 警告并最终失效。各 action 自 v5/v6 起
+# 已切到 Node 24 —— 注意这与下面 setup-node 的 node-version 是两件事，
+# 后者只决定"构建项目"用哪个 Node。
 
 name: 部署到 GitHub Pages
 
@@ -28,12 +34,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: 准备 Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 24 # 与本地开发一致，避免"本地能跑、CI 报错"
+          node-version: 24 # 构建用的 Node，与本地开发一致
           cache: npm
 
       - name: 安装依赖
@@ -50,10 +56,10 @@ jobs:
           DEPLOY_TARGET: github-pages
 
       - name: 配置 Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: 上传产物
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -66,4 +72,4 @@ jobs:
     steps:
       - name: 发布
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
