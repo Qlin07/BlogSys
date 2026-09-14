@@ -94,15 +94,15 @@ export interface SiteConfig {
 export const siteConfig: SiteConfig = {
   site: {
     // ↓↓↓ 上线前需要替换的字段 ↓↓↓
-    title: '未定义行为',
-    tagline: '工程里的取舍，以及那些当时以为对了的错',
+    title: 'Qilin\'s Blog',
+    tagline: '记录学习，记录游戏，记录生活',
     description:
-      '一个记录工程实践与踩坑的技术博客。写架构取舍、性能边界，和那些只有在生产环境才会暴露的问题。',
-    url: 'https://example.com',
+      '啥都有点，包括错误。',
+    url: 'https://qlin07.github.io/BlogSys/',
     author: {
-      name: '你的名字',
+      name: 'qlin07',
       email: 'you@example.com',
-      bio: '后端工程师，平时和缓存、索引、并发打交道。这里记下做过的事和想明白的问题。',
+      bio: '从网络安全到游戏开发，只有我顶着二次元头像但不是大佬。',
     },
     // ↑↑↑ 上线前需要替换的字段 ↑↑↑
     lang: 'zh-CN',
@@ -124,11 +124,10 @@ export const siteConfig: SiteConfig = {
       type: 'statement',
       span: 3,
       props: {
-        lead: '我写下工程里的取舍，以及那些当时以为对了的错。',
-        note: '这里没有教程。只有做过的事、量到的数，和事后才想明白的地方。',
+        lead: '记录学习，记录游戏，记录生活',
+        note: '从网络安全到游戏开发，只有我顶着二次元头像但不是大佬。',
         links: [
           { label: '按时间翻', href: '/archive' },
-          { label: '订阅 RSS', href: '/rss.xml' },
         ],
       },
     },
