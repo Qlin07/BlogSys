@@ -1,0 +1,106 @@
+---
+/**
+ * 单个系列：这里用编号是有依据的 —— 系列本身就是序列。
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PanelSection from '../../components/ui/PanelSection.astro';
+import { collectSeries, formatDate, getPosts, postHref, readingMinutes } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+
+  return collectSeries(posts).map((group) => ({
+    params: { name: group.name },
+    props: { name: group.name, posts: group.posts },
+  }));
+}
+
+const { name, posts } = Astro.props;
+---
+
+<BaseLayout title={`系列：${name}`} description={`系列「${name}」共 ${posts.length} 篇，按阅读顺序排列。`}>
+  <div class="page-heading">
+    <h1>{name}</h1>
+    <p>共 {posts.length} 篇，按阅读顺序排列。<a href="/series">看全部系列</a></p>
+  </div>
+
+  <PanelSection label={`系列 ${name}`}>
+    <ol class="series-list">
+      {
+        posts.map((post, index) => (
+          <li class="series-item">
+            <span class="series-item__index">{index + 1}</span>
+            <div class="series-item__body">
+              <h3 class="series-item__title">
+                <a href={postHref(post)}>{post.data.title}</a>
+              </h3>
+              <p class="series-item__summary">{post.data.summary}</p>
+              <ul class="meta-fields">
+                <li>
+                  <time datetime={formatDate(post.data.date)}>{formatDate(post.data.date)}</time>
+                </li>
+                <li>{readingMinutes(post)} 分钟</li>
+              </ul>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </PanelSection>
+</BaseLayout>
+
+<style>
+  .series-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .series-item {
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .series-item + .series-item {
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-5);
+  }
+
+  .series-item__index {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+    padding-top: 0.35em;
+  }
+
+  .series-item__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .series-item__title {
+    font-size: var(--fs-md);
+    letter-spacing: normal;
+  }
+
+  .series-item__title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .series-item__title a:hover {
+    color: var(--signal);
+  }
+
+  .series-item__summary {
+    max-width: var(--measure);
+    color: var(--text-dim);
+  }
+</style>

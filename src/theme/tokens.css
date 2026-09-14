@@ -1,0 +1,106 @@
+/**
+ * 结构 token —— 与主题无关，浅色/深色共用。
+ * 颜色 token 在 themes/ 下按主题覆盖，见 themes/light.css 与 themes/dark.css。
+ *
+ * 规则：间距、字号、圆角、动效时长都只能取自这里的 token，不允许出现裸数值。
+ */
+
+:root {
+  /* ---------- 字阶：1.25 倍模块化音阶，正文 17px ---------- */
+  --fs-xs: 0.75rem; /* 12px 行号、脚注 */
+  --fs-sm: 0.875rem; /* 14px 元信息、标签 */
+  --fs-base: 1.0625rem; /* 17px 正文 */
+  --fs-md: 1.3125rem; /* 21px h3 */
+  --fs-lg: 1.75rem; /* 28px h2 */
+  --fs-xl: 2.5rem; /* 40px h1 */
+  --fs-2xl: 3.5rem; /* 56px 首页主张 */
+
+  --lh-tight: 1.2;
+  --lh-snug: 1.45;
+  --lh-base: 1.75;
+
+  --tracking-tight: -0.02em; /* 标题收紧，模拟"刻在面板上" */
+
+  /* ---------- 间距：4px 基数 ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+
+  /* ---------- 圆角：同心规则，嵌套时 内层 = 外层 − 内边距 ---------- */
+  --radius-panel: 16px;
+  --radius-control: 8px;
+  --radius-chip: 6px;
+
+  /* ---------- 字体族 ---------- */
+  --font-sans:
+    'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-mono:
+    'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  /* 仅用于引文与旁注，与正文区分开 */
+  --font-note: 'LXGW WenKai', 'Kaiti SC', 'STKaiti', 'KaiTi', 'PingFang SC', serif;
+
+  /* ---------- 布局 ---------- */
+  --page-max: 1120px; /* 桌面 12 列栅格上限 */
+  --measure: 68ch; /* 正文行宽上限 */
+  --gutter: 32px;
+
+  /* ---------- 背景媒体 ---------- */
+  /* 前三个值由 site.config.ts 的 background 在 <html> 上行内注入；
+     最后两个在 backdrop.css 的 tone 块里给出真实值。
+     未配置背景时遮罩元素不渲染，因此这里的默认值不会生效。 */
+  --backdrop-blur: 0px;
+  --backdrop-position: 50% 50%;
+  --backdrop-scrim-alpha: 0;
+  --backdrop-scrim-rgb: 0 0 0;
+
+  /* ---------- 玻璃材质 ---------- */
+  /* 模糊半径取决于面板背后是什么，与厚度无关：
+     - flat：背后只有底纹网格，8px 足够把 1px 网格线化成一片匀色
+     - deep：背后有正文内容经过（顶栏、弹层），需要更大半径才不糊 */
+  --glass-blur-flat: 8px;
+  --glass-blur-deep: 28px;
+  --glass-saturate: 140%;
+  /* hover 时的提亮色，两套主题的 tint 都是白色基底，因此都向白提亮 */
+  --panel-boost: #fff;
+
+  /* ---------- 动效 ---------- */
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-enter: 500ms;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-settle: cubic-bezier(0.16, 0.84, 0.44, 1);
+
+  /* ---------- 层级 ---------- */
+  --z-substrate: 0;
+  --z-content: 1;
+  --z-header: 10;
+  --z-overlay: 20;
+}
+
+/* 平板：8 列 */
+@media (max-width: 1024px) {
+  :root {
+    --gutter: 24px;
+  }
+}
+
+/* 移动端：单列 */
+@media (max-width: 720px) {
+  :root {
+    --fs-xl: 1.875rem; /* 30px */
+    --fs-2xl: 2.25rem; /* 36px */
+    --fs-lg: 1.5rem; /* 24px */
+    --gutter: 20px;
+    --space-8: 48px;
+    --space-7: 32px;
+    /* 移动端进一步降低模糊半径，减少合成开销 */
+    --glass-blur-flat: 6px;
+    --glass-blur-deep: 18px;
+  }
+}

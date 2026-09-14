@@ -1,0 +1,44 @@
+---
+/**
+ * 首页 · 最近更新：紧凑列表，与归档页同一种形态。
+ */
+import PanelSection from '../ui/PanelSection.astro';
+import PostRow from '../post/PostRow.astro';
+import type { Post } from '../../lib/posts';
+
+interface Props {
+  heading: string;
+  posts: Post[];
+  total: number;
+  enterIndex?: number;
+}
+
+const { heading, posts, total, enterIndex = 0 } = Astro.props;
+---
+
+<PanelSection heading={heading} class="enter" style={`--enter-index: ${enterIndex}`}>
+  <ul class="recent">
+    {posts.map((post) => <PostRow post={post} />)}
+  </ul>
+
+  <a class="recent__more" href="/archive">全部 {total} 篇</a>
+</PanelSection>
+
+<style>
+  .recent {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .recent__more {
+    align-self: flex-start;
+    font-size: var(--fs-sm);
+    font-family: var(--font-mono);
+    color: var(--text-dim);
+  }
+
+  .recent__more:hover {
+    color: var(--signal);
+  }
+</style>

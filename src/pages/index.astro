@@ -1,0 +1,69 @@
+---
+/**
+ * 首页：完全由 site.config.ts 的 home 数组驱动。
+ * 数组顺序 = 渲染顺序，span = 桌面端 6 列栅格中占的列数。
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import siteConfig from '../site.config';
+import { getPosts } from '../lib/posts';
+
+import Statement from '../components/home/Statement.astro';
+import Latest from '../components/home/Latest.astro';
+import Recent from '../components/home/Recent.astro';
+import Now from '../components/home/Now.astro';
+
+const posts = await getPosts();
+const modules = siteConfig.home;
+const leading = posts[0];
+---
+
+<BaseLayout description={siteConfig.site.description}>
+  <div class="home">
+    {
+      modules.map((module, index) => (
+        <div class="home__cell" style={`--span: ${module.span}`}>
+          {module.type === 'statement' && <Statement {...module.props} enterIndex={index} />}
+
+          {module.type === 'latest' && leading && (
+            <Latest {...module.props} post={leading} enterIndex={index} />
+          )}
+
+          {module.type === 'recent' && (
+            <Recent
+              {...module.props}
+              posts={posts.slice(0, module.props.limit)}
+              total={posts.length}
+              enterIndex={index}
+            />
+          )}
+
+          {module.type === 'now' && <Now {...module.props} enterIndex={index} />}
+        </div>
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .home {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+
+  /* 让面板填满单元格，同一行的面板因此等高，像机柜里的一组面板 */
+  .home__cell {
+    display: grid;
+    grid-column: span var(--span);
+  }
+
+  @media (max-width: 1024px) {
+    .home {
+      grid-template-columns: 1fr;
+    }
+
+    .home__cell {
+      grid-column: auto;
+    }
+  }
+</style>

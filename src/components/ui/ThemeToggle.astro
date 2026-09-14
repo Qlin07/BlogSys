@@ -1,0 +1,102 @@
+---
+/**
+ * 主题切换：浅色 / 深色 / 跟随系统 三态循环。
+ *
+ * 按钮上显示的是当前状态，且标签由 CSS 依据 html[data-theme-mode] 决定，
+ * 因此首屏渲染就是正确状态，不依赖 JS，也不会闪一下再改。
+ */
+---
+
+<button class="theme-toggle" type="button" data-theme-toggle aria-label="切换主题">
+  <span aria-hidden="true">
+    <span data-mode="light">浅色</span><span data-mode="dark">深色</span><span data-mode="system"
+      >自动</span
+    >
+  </span>
+</button>
+
+<style>
+  .theme-toggle {
+    padding: var(--space-1) var(--space-3);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .theme-toggle:hover {
+    background-color: var(--wash);
+    color: var(--text);
+  }
+
+  .theme-toggle [data-mode] {
+    display: none;
+  }
+
+  /* 状态由文档根元素的属性驱动，跨组件边界，故用 :global */
+  :global(html[data-theme-mode='light']) .theme-toggle [data-mode='light'],
+  :global(html[data-theme-mode='dark']) .theme-toggle [data-mode='dark'],
+  :global(html[data-theme-mode='system']) .theme-toggle [data-mode='system'] {
+    display: inline;
+  }
+</style>
+
+<script>
+  type Mode = 'light' | 'dark' | 'system';
+
+  const MODES: Mode[] = ['light', 'dark', 'system'];
+  const LABELS: Record<Mode, string> = { light: '浅色', dark: '深色', system: '自动' };
+
+  const root = document.documentElement;
+  const mql = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function resolve(mode: Mode): 'light' | 'dark' {
+    return mode === 'system' ? (mql.matches ? 'dark' : 'light') : mode;
+  }
+
+  function currentMode(): Mode {
+    const mode = root.getAttribute('data-theme-mode');
+    return mode === 'dark' || mode === 'system' ? mode : 'light';
+  }
+
+  function apply(mode: Mode): void {
+    const theme = resolve(mode);
+    root.setAttribute('data-theme-mode', mode);
+    root.setAttribute('data-theme', theme);
+
+    // 背景调性设为 auto 时，它必须跟着主题一起走。
+    // 否则切换主题后，面板还是旧调性，而明暗主题的 token 已被覆盖 —— 配色会错乱。
+    if (root.hasAttribute('data-backdrop-auto')) {
+      root.setAttribute('data-backdrop-tone', theme);
+    }
+
+    const next = MODES[(MODES.indexOf(mode) + 1) % MODES.length]!;
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((button) => {
+      button.setAttribute('aria-label', `切换主题，当前${LABELS[mode]}，点击切换到${LABELS[next]}`);
+      button.title = `当前${LABELS[mode]}，点击切换到${LABELS[next]}`;
+    });
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const next = MODES[(MODES.indexOf(currentMode()) + 1) % MODES.length]!;
+      try {
+        localStorage.setItem('theme', next);
+      } catch {
+        /* 隐私模式下 localStorage 不可用，忽略即可，本次会话仍然生效 */
+      }
+      apply(next);
+    });
+  });
+
+  // 跟随系统时，系统主题变化需要同步
+  mql.addEventListener('change', () => {
+    if (currentMode() === 'system') apply('system');
+  });
+
+  apply(currentMode());
+</script>

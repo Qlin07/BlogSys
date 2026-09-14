@@ -1,0 +1,63 @@
+---
+/**
+ * 首页 · 现在：一句话状态，用定义列表而不是卡片。
+ */
+import PanelSection from '../ui/PanelSection.astro';
+import type { FieldItem } from '../../site.config';
+
+interface Props {
+  heading: string;
+  items: FieldItem[];
+  enterIndex?: number;
+}
+
+const { heading, items, enterIndex = 0 } = Astro.props;
+---
+
+<PanelSection heading={heading} class="enter" style={`--enter-index: ${enterIndex}`}>
+  <dl class="now">
+    {
+      items.map((item) => (
+        <>
+          <dt>{item.label}</dt>
+          <dd>{item.value}</dd>
+        </>
+      ))
+    }
+  </dl>
+</PanelSection>
+
+<style>
+  .now {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-3) var(--space-4);
+    margin: 0;
+  }
+
+  .now dt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    padding-top: 0.2em;
+  }
+
+  .now dd {
+    margin: 0;
+  }
+
+  @media (max-width: 720px) {
+    .now {
+      grid-template-columns: 1fr;
+      gap: var(--space-1) 0;
+    }
+
+    .now dd {
+      margin-bottom: var(--space-3);
+    }
+
+    .now dd:last-child {
+      margin-bottom: 0;
+    }
+  }
+</style>

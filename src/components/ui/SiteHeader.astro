@@ -1,0 +1,187 @@
+---
+/**
+ * 顶栏：一条贯穿全宽的玻璃条。
+ *
+ * 滚动后厚度从 thin 升到 thick —— 这是有信息含义的状态变化（它离你更近了），
+ * 而不是装饰。仅改变不透明度，不改变模糊半径：避免滚动中重算合成层。
+ */
+import siteConfig from '../../site.config';
+import Panel from '../glass/Panel.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import SearchDialog from './SearchDialog.astro';
+
+const pathname = Astro.url.pathname;
+const isCurrent = (href: string) =>
+  href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+---
+
+<header class="site-header" data-site-header data-scrolled="false">
+  <Panel thickness="thin" backdrop="deep" radius="none">
+    <div class="header-inner">
+      <a class="brand" href="/">{siteConfig.site.title}</a>
+
+      <nav class="nav" aria-label="主导航">
+        <ul>
+          {
+            siteConfig.nav.map((item) => (
+              <li>
+                <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <div class="tools">
+        {siteConfig.features.search && <SearchDialog />}
+        <a class="rss-link" href="/rss.xml" title="订阅 RSS">RSS</a>
+        <ThemeToggle />
+      </div>
+    </div>
+  </Panel>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+  }
+
+  /* 厚度覆盖：Panel 内部读取 --panel-tint-override，因此这里只改变量 */
+  .site-header[data-scrolled='true'] {
+    --panel-tint-override: var(--tint-thick);
+  }
+
+  /* 底边发丝线，与面板内高光叠加成完整的玻璃切边 */
+  .site-header::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background-color: var(--line);
+    pointer-events: none;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+    max-width: var(--page-max);
+    margin-inline: auto;
+    padding: var(--space-2) var(--gutter);
+    min-height: 60px;
+  }
+
+  .brand {
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    color: var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .nav {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav ul {
+    display: flex;
+    gap: var(--space-1);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav a {
+    position: relative;
+    display: block;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-control);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .nav a:hover {
+    color: var(--text);
+    background-color: var(--wash);
+  }
+
+  .nav a[aria-current='page'] {
+    color: var(--text);
+  }
+
+  /* 当前项指示条 —— 背光只出现在这里和焦点环 */
+  .nav a[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    inset-inline: var(--space-3);
+    bottom: -2px;
+    height: 2px;
+    border-radius: 1px;
+    background-color: var(--signal);
+  }
+
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-left: auto;
+  }
+
+  /* 与搜索、主题按钮同一套"非面板控件"外观，避免玻璃套玻璃 */
+  .rss-link {
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-control);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .rss-link:hover {
+    background-color: var(--wash);
+    color: var(--text);
+  }
+
+  @media (max-width: 720px) {
+    .header-inner {
+      gap: var(--space-2);
+      min-height: 52px;
+    }
+  }
+</style>
+
+<script>
+  const header = document.querySelector('[data-site-header]');
+
+  if (header) {
+    let scrolled = false;
+
+    const update = () => {
+      const next = window.scrollY > 8;
+      if (next !== scrolled) {
+        scrolled = next;
+        header.setAttribute('data-scrolled', String(next));
+      }
+    };
+
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+  }
+</script>

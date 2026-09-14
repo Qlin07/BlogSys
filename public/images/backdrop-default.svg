@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1200" viewBox="0 0 1920 1200">
+  <!--
+    默认背景。刻意不做成照片：它必须自包含、无外部请求，又能让模糊效果有东西可糊。
+    结构上只有三样东西 —— 冷调底色、几片柔光、一层细颗粒。
+    细颗粒是关键：它是唯一的高频细节，玻璃面板的模糊正是靠"把颗粒抹平"自证的。
+  -->
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="0.45" y2="1">
+      <stop offset="0" stop-color="#1b2a36"/>
+      <stop offset="0.5" stop-color="#121d27"/>
+      <stop offset="1" stop-color="#0a1119"/>
+    </linearGradient>
+
+    <radialGradient id="glow-teal" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2ed3c2" stop-opacity="0.30"/>
+      <stop offset="0.5" stop-color="#2ed3c2" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#2ed3c2" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="glow-blue" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4a7fc1" stop-opacity="0.28"/>
+      <stop offset="0.55" stop-color="#4a7fc1" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#4a7fc1" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="horizon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fb4d6" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#7fb4d6" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#7fb4d6" stop-opacity="0"/>
+    </linearGradient>
+
+    <radialGradient id="vignette" cx="0.5" cy="0.44" r="0.78">
+      <stop offset="0.4" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.55"/>
+    </radialGradient>
+
+    <!-- 细颗粒：给模糊效果提供高频细节 -->
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="9"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1200" fill="url(#base)"/>
+
+  <ellipse cx="1460" cy="300" rx="820" ry="560" fill="url(#glow-teal)"/>
+  <ellipse cx="360" cy="960" rx="880" ry="600" fill="url(#glow-blue)"/>
+  <rect x="0" y="640" width="1920" height="260" fill="url(#horizon)"/>
+
+  <rect width="1920" height="1200" filter="url(#grain)" opacity="0.1"/>
+  <rect width="1920" height="1200" fill="url(#vignette)"/>
+</svg>

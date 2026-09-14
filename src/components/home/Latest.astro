@@ -1,0 +1,109 @@
+---
+/**
+ * 首页 · 最近一篇：给最新的一篇足够的分量，而不是把所有内容切成等大卡片。
+ */
+import PanelSection from '../ui/PanelSection.astro';
+import TagChip from '../ui/TagChip.astro';
+import type { Post } from '../../lib/posts';
+import { formatDate, postHref, readingMinutes } from '../../lib/posts';
+
+interface Props {
+  heading: string;
+  post: Post;
+  enterIndex?: number;
+}
+
+const { heading, post, enterIndex = 0 } = Astro.props;
+const { title, date, summary, tags } = post.data;
+---
+
+<PanelSection heading={heading} class="enter" style={`--enter-index: ${enterIndex}`}>
+  <article class="latest">
+    <time class="latest__date" datetime={formatDate(date)}>{formatDate(date)}</time>
+
+    <h3 class="latest__title">
+      <a href={postHref(post)}>{title}</a>
+    </h3>
+
+    <p class="latest__summary">{summary}</p>
+
+    <ul class="latest__meta">
+      <li>{readingMinutes(post)} 分钟</li>
+    </ul>
+
+    {
+      tags.length > 0 && (
+        <ul class="latest__tags">
+          {tags.map((tag) => (
+            <li>
+              <TagChip tag={tag} />
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </article>
+</PanelSection>
+
+<style>
+  .latest {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .latest__date {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .latest__title {
+    font-size: var(--fs-lg);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  /* 整块面板可点击，但标签仍然独立可点 */
+  .latest__title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .latest__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-panel);
+  }
+
+  .latest__title a:hover {
+    color: var(--signal);
+  }
+
+  .latest__summary {
+    color: var(--text-dim);
+  }
+
+  .latest__meta,
+  .latest__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .latest__meta li {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+
+  /* 抬到整块链接之上，保证标签可点 */
+  .latest__tags {
+    position: relative;
+    z-index: 1;
+  }
+</style>

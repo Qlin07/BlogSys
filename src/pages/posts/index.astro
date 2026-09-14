@@ -1,0 +1,32 @@
+---
+/**
+ * 文章索引：一个面板里的列表，而不是等大卡片网格。
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PanelSection from '../../components/ui/PanelSection.astro';
+import PostRow from '../../components/post/PostRow.astro';
+import { getPosts } from '../../lib/posts';
+
+const posts = await getPosts();
+---
+
+<BaseLayout title="文章" description="按时间倒序排列的全部文章。">
+  <div class="page-heading">
+    <h1>文章</h1>
+    <p>共 {posts.length} 篇，按时间倒序。想按年翻可以走归档。</p>
+  </div>
+
+  <PanelSection label="全部文章">
+    <ul class="post-list">
+      {posts.map((post) => <PostRow post={post} showSummary showTags />)}
+    </ul>
+  </PanelSection>
+</BaseLayout>
+
+<style>
+  .post-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+</style>

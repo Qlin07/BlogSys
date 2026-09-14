@@ -1,0 +1,40 @@
+---
+/**
+ * 归档：按年分组的紧凑列表。
+ * 归档本就是列表，所以不做成卡片网格；年份是真实的归档信息，因此作为分组标题。
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PanelSection from '../components/ui/PanelSection.astro';
+import PostRow from '../components/post/PostRow.astro';
+import { getPosts, groupByYear } from '../lib/posts';
+
+const posts = await getPosts();
+const years = groupByYear(posts);
+---
+
+<BaseLayout title="归档" description="全部文章按年份归档。">
+  <div class="page-heading">
+    <h1>归档</h1>
+    <p>共 {posts.length} 篇，跨 {years.length} 个年份。</p>
+  </div>
+
+  {
+    years.map((group) => (
+      <PanelSection heading={String(group.year)}>
+        <ul class="post-list">
+          {group.posts.map((post) => (
+            <PostRow post={post} />
+          ))}
+        </ul>
+      </PanelSection>
+    ))
+  }
+</BaseLayout>
+
+<style>
+  .post-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+</style>

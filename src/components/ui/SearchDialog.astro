@@ -1,0 +1,233 @@
+---
+/**
+ * 搜索：基于 Pagefind 的静态索引，无后端。
+ *
+ * pagefind 的产物只在构建后存在（dist/pagefind），因此这里的资源是
+ * 首次打开时才动态注入的 —— 开发环境不会因此报 404，也不占用首屏预算。
+ */
+import Panel from '../glass/Panel.astro';
+---
+
+<div class="search">
+  <button class="search-trigger" type="button" data-search-open aria-label="搜索文章">
+    <span>搜索</span>
+    <kbd class="search-trigger__key" data-search-key aria-hidden="true">Ctrl K</kbd>
+  </button>
+
+  <dialog class="search-dialog" data-search-dialog aria-label="搜索文章">
+    <Panel thickness="thick" backdrop="deep" radius="panel">
+      <div class="search-dialog__body">
+        <div class="search-dialog__head">
+          <span class="search-dialog__hint">Esc 关闭</span>
+          <button class="search-dialog__close" type="button" data-search-close>关闭</button>
+        </div>
+        <div data-search-root></div>
+      </div>
+    </Panel>
+  </dialog>
+</div>
+
+<style>
+  .search-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-control);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+
+  .search-trigger:hover {
+    background-color: var(--wash);
+    color: var(--text);
+  }
+
+  .search-trigger__key {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    padding: 2px var(--space-1);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-chip);
+    color: var(--text-dim);
+  }
+
+  .search-dialog {
+    width: 100%;
+    max-width: min(560px, calc(100vw - 2 * var(--gutter)));
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    margin: auto;
+  }
+
+  .search-dialog::backdrop {
+    background-color: var(--scrim);
+  }
+
+  .search-dialog__body {
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .search-dialog__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .search-dialog__hint {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+  }
+
+  .search-dialog__close {
+    padding: var(--space-1) var(--space-3);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-control);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+
+  .search-dialog__close:hover {
+    background-color: var(--wash);
+    color: var(--text);
+  }
+
+  /* Pagefind UI 的默认观感与本站不符，这里只做必要的对齐 */
+  .search-dialog__body :global(.pagefind-ui) {
+    --pagefind-ui-font: var(--font-sans);
+    --pagefind-ui-text: var(--text);
+    --pagefind-ui-background: transparent;
+    --pagefind-ui-border: var(--line);
+    --pagefind-ui-tag: var(--wash);
+    --pagefind-ui-border-width: 1px;
+    --pagefind-ui-border-radius: var(--radius-control);
+    --pagefind-ui-primary: var(--signal);
+    --pagefind-ui-image-border-radius: var(--radius-control);
+  }
+
+  .search-dialog__body :global(.pagefind-ui__search-input) {
+    font-size: var(--fs-base);
+    background-color: var(--wash);
+  }
+
+  .search-dialog__body :global(.search-fallback) {
+    color: var(--text-dim);
+    font-size: var(--fs-sm);
+    max-width: var(--measure);
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var dialog = document.querySelector('[data-search-dialog]');
+    if (!dialog) return;
+
+    var root = dialog.querySelector('[data-search-root]');
+    var assetsRequested = false;
+
+    // 键盘提示跟随平台，而不是硬编码 Ctrl
+    var isApple = /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
+    document.querySelectorAll('[data-search-key]').forEach(function (node) {
+      node.textContent = isApple ? '⌘ K' : 'Ctrl K';
+    });
+
+    function loadAssets() {
+      if (assetsRequested) return;
+      assetsRequested = true;
+
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/pagefind/pagefind-ui.css';
+      document.head.appendChild(link);
+
+      var script = document.createElement('script');
+      script.src = '/pagefind/pagefind-ui.js';
+      script.onload = function () {
+        if (!window.PagefindUI || !root) return;
+        new window.PagefindUI({
+          element: root,
+          showSubResults: true,
+          showImages: false,
+          translations: {
+            placeholder: '搜索文章',
+            clear_search: '清空',
+            load_more: '加载更多结果',
+            search_label: '在此站点搜索',
+            filters_label: '筛选',
+            zero_results: '没有匹配「[SEARCH_TERM]」的内容',
+            many_results: '「[SEARCH_TERM]」共 [COUNT] 条结果',
+            one_result: '「[SEARCH_TERM]」共 1 条结果',
+            alt_search: '没有匹配「[SEARCH_TERM]」的内容，改为显示「[DIFFERENT_TERM]」的结果',
+            search_suggestion: '没有匹配「[SEARCH_TERM]」的内容，试试下面这些',
+            searching: '搜索「[SEARCH_TERM]」…',
+          },
+        });
+      };
+      script.onerror = function () {
+        if (!root) return;
+        var fallback = document.createElement('p');
+        fallback.className = 'search-fallback';
+        fallback.textContent =
+          '搜索索引尚未生成。本地开发时先执行一次 npm run build，构建产物中的搜索即可用。';
+        root.appendChild(fallback);
+      };
+      document.head.appendChild(script);
+    }
+
+    function open() {
+      loadAssets();
+      if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+      } else {
+        dialog.setAttribute('open', '');
+      }
+      window.setTimeout(function () {
+        var input = dialog.querySelector('input');
+        if (input) input.focus();
+      }, 60);
+    }
+
+    function close() {
+      if (typeof dialog.close === 'function') {
+        dialog.close();
+      } else {
+        dialog.removeAttribute('open');
+      }
+    }
+
+    document.querySelectorAll('[data-search-open]').forEach(function (button) {
+      button.addEventListener('click', open);
+    });
+
+    document.querySelectorAll('[data-search-close]').forEach(function (button) {
+      button.addEventListener('click', close);
+    });
+
+    // 点击面板外的遮罩区域关闭
+    dialog.addEventListener('click', function (event) {
+      if (event.target === dialog) close();
+    });
+
+    document.addEventListener('keydown', function (event) {
+      var key = event.key.toLowerCase();
+      if ((event.metaKey || event.ctrlKey) && key === 'k') {
+        event.preventDefault();
+        if (dialog.hasAttribute('open')) close();
+        else open();
+      }
+    });
+  })();
+</script>

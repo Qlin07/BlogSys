@@ -1,0 +1,106 @@
+/**
+ * 背景媒体模式
+ *
+ * 一旦配置了背景图/视频，"底纹亮度预算"就失去了前提：亮度不由我们控制。
+ * 这里用两个手段把可读性重新变成可控的：
+ *
+ *   1. 遮罩（scrim）铺在媒体之上、面板之下。它在数学上给面板一个亮度下限：
+ *
+ *        panel = α_tint + α_scrim − α_tint · α_scrim
+ *
+ *      遮罩不够强时，最薄的 thin 面板会击穿 4.5:1，因此下限由
+ *      scripts/verify-contrast.mjs 反解并校验，配置低于它构建会失败。
+ *
+ *   2. 调性（tone）整组覆盖前景 token。site.config.ts 里 tone 取 auto 时，
+ *      BaseLayout 的内联脚本会让它跟随明暗主题（dark 主题→dark 调性）；
+ *      取 dark / light 时则固定不变，用于"这张图只适合一种用法"的情况。
+ *
+ * 选择器写 html[data-backdrop][data-backdrop-tone='dark']（0,2,1），
+ * 刻意压过主题文件的 :root[data-theme='light']（0,2,0），因此不依赖导入顺序。
+ */
+
+/* ---------- 共同项 ---------- */
+/* 背后不再是一张 1px 网格，而是有真实细节的照片，
+   所以 flat 从 8px 提到 20px；deep 同步上调到 34px。
+
+   移动端必须在这里再降一次：本选择器的优先级（0,1,1）高于 tokens.css 里
+   限降级的 `:root`（0,1,0），不重写就会把移动端的降级整个架空 ——
+   而移动端正是模糊最贵的地方。 */
+
+html[data-backdrop] {
+  --glass-blur-flat: 20px;
+  --glass-blur-deep: 34px;
+}
+
+@media (max-width: 720px) {
+  html[data-backdrop] {
+    --glass-blur-flat: 14px;
+    --glass-blur-deep: 22px;
+  }
+}
+
+/* ---------- 暗调：照片的默认选择 ---------- */
+/* 遮罩压暗 → 面板以暗色为主 → 文字提亮。
+   面板 alpha 比常规主题高（0.6 / 0.76 / 0.9）：玻璃越薄，可控的动态范围越窄，
+   次级文字越没有余量 —— 这是透明面板的固有代价，不是可以调掉的参数。 */
+
+html[data-backdrop][data-backdrop-tone='dark'] {
+  color-scheme: dark;
+
+  /* 媒体未加载时的兜底，也让首屏不闪白 */
+  --substrate: #0b1216;
+  --backdrop-scrim-rgb: 8 16 21;
+
+  --text: #eef2f4;
+  --text-dim: #b8c3ca;
+  --signal: #5ee0cd;
+  --alert: #fcb4a4;
+
+  --line: rgb(255 255 255 / 0.14);
+  --line-strong: rgb(255 255 255 / 0.26);
+
+  --wash: rgb(255 255 255 / 0.1);
+  --wash-strong: rgb(255 255 255 / 0.16);
+
+  --tint-thin: rgb(10 20 26 / 0.6);
+  --tint-regular: rgb(10 20 26 / 0.76);
+  --tint-thick: rgb(10 20 26 / 0.9);
+
+  --glass-edge:
+    inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 0 0 1px rgb(255 255 255 / 0.1);
+
+  --scrim: rgb(0 0 0 / 0.6);
+  --backlight: 0 0 0 4px rgb(94 224 205 / 0.3);
+}
+
+/* ---------- 亮调：亮色插画与浅色照片 ---------- */
+/* 遮罩提亮 → 面板以白色为主 → 文字压深。
+   注意遮罩颜色也跟着翻成白色：这是亮度下限能成立的前提。 */
+
+html[data-backdrop][data-backdrop-tone='light'] {
+  color-scheme: light;
+
+  --substrate: #eef1f3;
+  --backdrop-scrim-rgb: 255 255 255;
+
+  --text: #101820;
+  --text-dim: #3f4a52;
+  --signal: #084f4a;
+  --alert: #8a2a1e;
+
+  --line: rgb(20 28 34 / 0.12);
+  --line-strong: rgb(20 28 34 / 0.2);
+
+  --wash: rgb(20 28 34 / 0.07);
+  --wash-strong: rgb(20 28 34 / 0.12);
+
+  --tint-thin: rgb(255 255 255 / 0.6);
+  --tint-regular: rgb(255 255 255 / 0.76);
+  --tint-thick: rgb(255 255 255 / 0.9);
+
+  --glass-edge:
+    inset 0 1px 0 rgb(255 255 255 / 0.8), inset 0 0 0 1px rgb(255 255 255 / 0.45);
+
+  --scrim: rgb(20 28 34 / 0.34);
+  --backlight: 0 0 0 4px rgb(8 79 74 / 0.26);
+}

@@ -1,0 +1,38 @@
+/**
+ * 深色主题
+ *
+ * 与浅色主题共用同一套结构 token，只覆盖颜色。
+ * 深色下 tint 极低，面板靠 --glass-edge 的 1px 内描边成形，
+ * 因此描边的不透明度上限比浅色主题更关键。
+ */
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* 冷灰近黑，不用 #000 */
+  --substrate: #0e1317;
+
+  --text: #e4eaee;
+  --text-dim: #9aa7b0;
+
+  /* 深色底上用亮版青；深色下最差情形是 thick 面板（顶栏），因此亮度上限更紧 */
+  --signal: #2ed3c2;
+  --alert: #f58570;
+
+  --line: rgb(255 255 255 / 0.1);
+  --line-strong: rgb(255 255 255 / 0.2);
+
+  --wash: rgb(255 255 255 / 0.07);
+  --wash-strong: rgb(255 255 255 / 0.12);
+
+  --scrim: rgb(0 0 0 / 0.55);
+
+  --tint-thin: rgb(255 255 255 / 0.04);
+  --tint-regular: rgb(255 255 255 / 0.08);
+  --tint-thick: rgb(255 255 255 / 0.14);
+
+  --glass-edge:
+    inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 0 0 1px rgb(255 255 255 / 0.08);
+
+  --backlight: 0 0 0 4px rgb(46 211 194 / 0.22);
+}

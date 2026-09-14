@@ -1,0 +1,295 @@
+/**
+ * 基线：重置、底纹 substrate、排版基线、焦点、首屏编排、打印
+ */
+
+/* ---------- 重置 ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 96px; /* 顶栏高度 + 余量，锚点跳转不被遮挡 */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  min-height: 100dvh;
+  background-color: var(--substrate);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-base);
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+picture,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background-color: color-mix(in oklab, var(--signal) 28%, transparent);
+}
+
+/* ---------- 底纹 substrate ---------- */
+/* 玻璃之所以是玻璃，因为它盖着东西。这块东西就是自定义背景图：
+   面板后方被模糊抹平的细节，是玻璃存在的唯一证据，不需要任何装饰来暗示。
+
+   自下而上三层：
+     1. 底色  —— 纯色兜底，媒体未加载时也不会闪白
+     2. 媒体  —— 自定义背景图/视频
+     3. 遮罩  —— 给面板一个亮度下限，照片亮度不可控，靠它把对比度拉回可读区间 */
+
+.substrate {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--substrate);
+}
+
+/* 图片与视频共用定位。虚化会向四周溢出，因此用负 inset 把盒子放大补偿回来。
+   max-width 必须显式放开：基线的 `img { max-width: 100% }` 会把这个补偿截断，
+   导致 blur 越大、四周越容易露出糊边。 */
+.substrate__media {
+  position: absolute;
+  top: calc(-2 * var(--backdrop-blur));
+  left: calc(-2 * var(--backdrop-blur));
+  width: calc(100% + 4 * var(--backdrop-blur));
+  height: calc(100% + 4 * var(--backdrop-blur));
+  max-width: none;
+  object-fit: cover;
+  object-position: var(--backdrop-position);
+  filter: blur(var(--backdrop-blur));
+}
+
+/* 遮罩：铺在媒体之上、面板之下。它在数学上给面板一个亮度下限，
+   是可读性的真正保证 ——
+   panel = α_tint + α_scrim − α_tint·α_scrim */
+.substrate__scrim {
+  position: absolute;
+  inset: 0;
+  background-color: rgb(var(--backdrop-scrim-rgb) / var(--backdrop-scrim-alpha));
+}
+
+/* 循环播放的背景视频是最容易引发不适的一类持续动效，直接退回静态图 */
+@media (prefers-reduced-motion: reduce) {
+  .substrate__video {
+    display: none;
+  }
+}
+
+/* ---------- 排版基线 ---------- */
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--fs-xl);
+}
+h2 {
+  font-size: var(--fs-lg);
+}
+h3 {
+  font-size: var(--fs-md);
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--signal);
+  text-decoration-color: color-mix(in oklab, var(--signal) 40%, transparent);
+  text-underline-offset: 0.25em;
+}
+
+a:hover {
+  text-decoration-color: currentColor;
+}
+
+/* 元信息：mono 字体承担结构性数据，而非装饰性小标签 */
+.meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.meta-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  list-style: none;
+  padding: 0;
+}
+
+.meta-fields li {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 布局 ---------- */
+
+.wrap {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.page {
+  position: relative;
+  z-index: var(--z-content);
+  padding-block: var(--space-7) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.page-heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.page-heading p {
+  color: var(--text-dim);
+  max-width: var(--measure);
+}
+
+/* ---------- 焦点 ---------- */
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+  border-radius: var(--radius-chip);
+  /* 背光只属于交互：全站唯二出现背光的位置是焦点环与当前导航项 */
+  box-shadow: var(--backlight);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-4);
+  z-index: var(--z-overlay);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--tint-thick);
+  color: var(--text);
+  border-radius: var(--radius-control);
+  box-shadow: var(--glass-edge);
+  transform: translateY(-200%);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* ---------- 首屏编排：全站唯一的非用户触发动效 ---------- */
+/* 一次，不随滚动重复。网格先描出，随后面板落位、厚度收敛到稳定值。 */
+
+@media (prefers-reduced-motion: no-preference) {
+  .substrate {
+    animation: substrate-in 600ms var(--ease-out) 60ms both;
+  }
+
+  .enter {
+    animation: panel-settle var(--dur-enter) var(--ease-settle) both;
+    animation-delay: calc(160ms + var(--enter-index, 0) * 80ms);
+  }
+}
+
+@keyframes substrate-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes panel-settle {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    /* 厚度从"厚"收敛到设计值，表示面板吸附到位 */
+    backdrop-filter: blur(var(--glass-blur-deep)) saturate(var(--glass-saturate));
+  }
+}
+
+/* ---------- 打印：玻璃在纸上没有意义 ---------- */
+
+@media print {
+  .substrate,
+  .site-header,
+  .site-footer,
+  .toc {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .panel {
+    background: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  a {
+    color: #000;
+  }
+}

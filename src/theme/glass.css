@@ -1,0 +1,78 @@
+/**
+ * 玻璃原语
+ *
+ * 全站所有透明面板只能来自这里。业务组件不得直接写 backdrop-filter、面板背景色
+ * 或边缘阴影 —— 这样"换皮"只需改这一个文件，新页面也天然获得一致的材质表现。
+ *
+ * 两条独立的轴，不要混为一谈：
+ *   厚度（thickness）→ 不透明度，表达层级：越厚的元素在物理上越靠近观察者
+ *   背景（backdrop） → 模糊半径，取决于面板背后是什么：底纹网格用 8px 就够，
+ *                      正文会从背后经过的地方（顶栏、弹层）才需要 28px
+ */
+
+.panel {
+  --panel-tint: var(--tint-regular);
+  --panel-blur: var(--glass-blur-flat);
+  --panel-radius: var(--radius-panel);
+  /* 允许外层显式覆盖厚度：祖先元素设置 --panel-tint-override 即可，
+     用于顶栏这类"厚度随滚动状态变化"的元素 */
+  --panel-tint-resolved: var(--panel-tint-override, var(--panel-tint));
+
+  position: relative;
+  background-color: var(--panel-tint-resolved);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--glass-edge);
+  backdrop-filter: blur(var(--panel-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--panel-blur)) saturate(var(--glass-saturate));
+  /* 只过渡不透明度，不过渡 backdrop-filter：避免滚动中重算合成层 */
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+
+/* ---------- 厚度分级：只改不透明度 ---------- */
+
+.panel-thin {
+  --panel-tint: var(--tint-thin);
+}
+
+.panel-thick {
+  --panel-tint: var(--tint-thick);
+}
+
+/* ---------- 背景分级：只改模糊半径 ---------- */
+
+.panel-backdrop-deep {
+  --panel-blur: var(--glass-blur-deep);
+}
+
+/* ---------- 圆角分级（同心：嵌套时内层 = 外层 − 内边距） ---------- */
+
+.panel-radius-control {
+  --panel-radius: var(--radius-control);
+}
+
+.panel-radius-chip {
+  --panel-radius: var(--radius-chip);
+}
+
+.panel-radius-none {
+  --panel-radius: 0;
+}
+
+/* ---------- 交互：改变厚度，而不是上浮或加深阴影 ---------- */
+
+.panel-interactive {
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.panel-interactive:hover {
+  background-color: color-mix(in oklab, var(--panel-tint-resolved) 90%, var(--panel-boost));
+}
+
+/* ---------- 降级：不支持模糊时转为近乎不透明 ---------- */
+/* 布局与层级完全不变，只是失去透明感 */
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .panel {
+    background-color: color-mix(in oklab, var(--panel-tint-resolved) 96%, var(--substrate));
+  }
+}

@@ -1,0 +1,62 @@
+---
+/**
+ * 404：空状态提示该做什么，而不是只说"出错了"。
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Panel from '../components/glass/Panel.astro';
+---
+
+<BaseLayout title="页面不存在" description="这个地址没有对应的内容。" noindex>
+  <div class="not-found">
+    <Panel thickness="regular">
+      <div class="not-found__body">
+        <h1>这个地址没有内容</h1>
+        <p>
+          可能是文章改过标题、链接少了一段，或者本来就写错了。从下面这几个地方可以继续找。
+        </p>
+        <ul class="not-found__links">
+          <li><a href="/posts">全部文章</a></li>
+          <li><a href="/archive">按年份归档</a></li>
+          <li><a href="/tags">按标签找</a></li>
+          <li><a href="/">回到首页</a></li>
+        </ul>
+      </div>
+    </Panel>
+  </div>
+</BaseLayout>
+
+<style>
+  /* 全站唯一居中的页面：这里没有需要对齐的相邻内容 */
+  .not-found {
+    display: flex;
+    justify-content: center;
+    padding-block: var(--space-6);
+  }
+
+  .not-found__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-7) var(--space-6);
+    max-width: 34rem;
+    text-align: center;
+  }
+
+  .not-found__body h1 {
+    font-size: var(--fs-lg);
+  }
+
+  .not-found__body p {
+    color: var(--text-dim);
+  }
+
+  .not-found__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2) var(--space-5);
+    list-style: none;
+    margin: var(--space-2) 0 0;
+    padding: 0;
+  }
+</style>

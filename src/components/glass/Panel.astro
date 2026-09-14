@@ -1,0 +1,45 @@
+---
+/**
+ * 玻璃原语 —— 全站唯一允许产出透明面板的组件。
+ *
+ * 业务组件只传语义化的厚度与圆角，不接触 backdrop-filter / 背景色 / 边缘阴影。
+ * 嵌套时内层圆角 = 外层圆角 − 内边距（同心规则），由 radius 参数表达。
+ */
+interface Props {
+  /** 厚度即层级：越厚的元素越不透明 */
+  thickness?: 'thin' | 'regular' | 'thick';
+  /** 背后是什么：底纹网格用 flat（默认），正文会从背后经过时用 deep */
+  backdrop?: 'flat' | 'deep';
+  radius?: 'panel' | 'control' | 'chip' | 'none';
+  /** 开启后 hover 改变厚度（而非上浮或加深阴影） */
+  interactive?: boolean;
+  as?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+
+const {
+  thickness = 'regular',
+  backdrop = 'flat',
+  radius = 'panel',
+  interactive = false,
+  as: tag = 'div',
+  class: className,
+  ...rest
+} = Astro.props as Props;
+
+const Tag = tag as 'div';
+
+const classes = [
+  'panel',
+  thickness !== 'regular' && `panel-${thickness}`,
+  backdrop !== 'flat' && `panel-backdrop-${backdrop}`,
+  radius !== 'panel' && `panel-radius-${radius}`,
+  interactive && 'panel-interactive',
+  className,
+];
+---
+
+<Tag class:list={classes} {...rest}>
+  <slot />
+</Tag>

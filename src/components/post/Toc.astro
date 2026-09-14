@@ -1,0 +1,130 @@
+---
+/**
+ * 目录：thin 厚度的窄面板，滚动时高亮当前章节。
+ *
+ * 当前项用信号色左侧竖条指示，不用加粗 —— 加粗会引起列表宽度跳动。
+ */
+import Panel from '../glass/Panel.astro';
+import type { MarkdownHeading } from 'astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+const items = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+{
+  items.length > 0 && (
+    <nav class="toc" aria-labelledby="toc-heading">
+      <Panel thickness="thin" radius="panel">
+        <div class="toc__body">
+          <h2 class="toc__heading" id="toc-heading">
+            目录
+          </h2>
+          <ul class="toc__list">
+            {items.map((heading) => (
+              <li class:list={['toc__item', heading.depth === 3 && 'toc__item--sub']}>
+                <a href={`#${heading.slug}`} data-toc-link={heading.slug}>
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Panel>
+    </nav>
+  )
+}
+
+<style>
+  .toc__body {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    gap: var(--space-2);
+  }
+
+  .toc__heading {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 400;
+    letter-spacing: normal;
+    color: var(--text-dim);
+  }
+
+  .toc__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .toc__item a {
+    display: block;
+    padding: 2px var(--space-2);
+    border-left: 2px solid transparent;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-snug);
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  .toc__item a:hover {
+    color: var(--text);
+  }
+
+  .toc__item--sub a {
+    padding-left: var(--space-4);
+  }
+
+  .toc__item a[aria-current='true'] {
+    color: var(--text);
+    border-left-color: var(--signal);
+  }
+</style>
+
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')];
+
+  if (links.length > 0) {
+    const targets = links
+      .map((link) => ({ link, heading: document.getElementById(link.dataset.tocLink ?? '') }))
+      .filter((item): item is { link: HTMLAnchorElement; heading: HTMLElement } => item.heading !== null);
+
+    /** 顶栏高度 + 余量，与 base.css 的 scroll-padding-top 保持一致 */
+    const NAV_OFFSET = 96;
+    let current = '';
+    let scheduled = false;
+
+    const update = () => {
+      scheduled = false;
+
+      // 位置落在顶栏之下的最后一个标题，就是当前章节
+      let active = targets[0]?.heading.id ?? '';
+      for (const { heading } of targets) {
+        if (heading.getBoundingClientRect().top <= NAV_OFFSET) active = heading.id;
+      }
+
+      if (active === current) return;
+      current = active;
+
+      for (const { link } of targets) link.removeAttribute('aria-current');
+      targets.find((item) => item.heading.id === active)?.link.setAttribute('aria-current', 'true');
+    };
+
+    const onScroll = () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+  }
+</script>

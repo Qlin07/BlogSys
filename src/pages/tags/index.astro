@@ -1,0 +1,42 @@
+---
+/**
+ * 标签总览：标签之间没有顺序关系，所以只按文章数排列，不加编号也不加图标。
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PanelSection from '../../components/ui/PanelSection.astro';
+import TagChip from '../../components/ui/TagChip.astro';
+import { collectTags, getPosts } from '../../lib/posts';
+
+const posts = await getPosts();
+const tags = collectTags(posts);
+---
+
+<BaseLayout title="标签" description="按标签浏览全部文章。">
+  <div class="page-heading">
+    <h1>标签</h1>
+    <p>共 {tags.length} 个标签。数字是文章数。</p>
+  </div>
+
+  <PanelSection label="全部标签">
+    <ul class="tag-cloud">
+      {
+        tags.map((item) => (
+          <li>
+            <TagChip tag={item.tag} count={item.count} />
+          </li>
+        ))
+      }
+    </ul>
+  </PanelSection>
+</BaseLayout>
+
+<style>
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+</style>

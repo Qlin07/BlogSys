@@ -1,0 +1,135 @@
+---
+/**
+ * 列表行：归档与索引页的默认形态。
+ *
+ * 左列是 mono 日期，右列是标题与摘要 —— 归档本就是列表，所以不做成卡片网格。
+ * 元信息用对齐的字段表达，不用中点串联。
+ */
+import type { Post } from '../../lib/posts';
+import { formatDate, postHref, readingMinutes } from '../../lib/posts';
+import TagChip from '../ui/TagChip.astro';
+
+interface Props {
+  post: Post;
+  showSummary?: boolean;
+  showTags?: boolean;
+}
+
+const { post, showSummary = false, showTags = false } = Astro.props;
+const { title, date, summary, tags } = post.data;
+---
+
+<li class="post-row">
+  <time class="post-row__date" datetime={formatDate(date)}>{formatDate(date)}</time>
+
+  <div class="post-row__body">
+    <h3 class="post-row__title">
+      <a href={postHref(post)}>{title}</a>
+    </h3>
+
+    {showSummary && <p class="post-row__summary">{summary}</p>}
+
+    <ul class="post-row__meta">
+      <li>{readingMinutes(post)} 分钟</li>
+      {post.data.series && <li>系列 {post.data.series}</li>}
+    </ul>
+
+    {
+      showTags && tags.length > 0 && (
+        <ul class="post-row__tags">
+          {tags.map((tag) => (
+            <li>
+              <TagChip tag={tag} />
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</li>
+
+<style>
+  .post-row {
+    display: grid;
+    grid-template-columns: 7.5rem 1fr;
+    gap: var(--space-2) var(--space-5);
+    padding-block: var(--space-4);
+  }
+
+  .post-row + .post-row {
+    border-top: 1px solid var(--line);
+  }
+
+  /* 列表首尾不叠加容器内边距 */
+  .post-row:first-child {
+    padding-top: 0;
+  }
+
+  .post-row:last-child {
+    padding-bottom: 0;
+  }
+
+  .post-row__date {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+    line-height: var(--lh-snug);
+    padding-top: 0.35em;
+  }
+
+  .post-row__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .post-row__title {
+    font-size: var(--fs-md);
+    letter-spacing: normal;
+  }
+
+  .post-row__title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .post-row__title a:hover {
+    color: var(--signal);
+  }
+
+  .post-row__summary {
+    max-width: var(--measure);
+    color: var(--text-dim);
+    font-size: var(--fs-base);
+  }
+
+  .post-row__meta,
+  .post-row__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .post-row__meta li {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 720px) {
+    .post-row {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+
+    .post-row__date {
+      padding-top: 0;
+    }
+  }
+</style>

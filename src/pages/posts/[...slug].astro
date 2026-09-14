@@ -1,0 +1,36 @@
+---
+import PostLayout from '../../layouts/PostLayout.astro';
+import { render } from 'astro:content';
+import type { Post } from '../../lib/posts';
+import { collectSeries, getPosts } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+
+  // 系列序号在这里一次算好，文章页直接用
+  const seriesInfo = new Map<string, { name: string; index: number; total: number }>();
+  for (const group of collectSeries(posts)) {
+    group.posts.forEach((post, index) => {
+      seriesInfo.set(post.id, { name: group.name, index: index + 1, total: group.posts.length });
+    });
+  }
+
+  return posts.map((post, index) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      // posts 按日期倒序，因此前一个是更新的，后一个是更早的
+      newer: posts[index - 1] as Post | undefined,
+      older: posts[index + 1] as Post | undefined,
+      series: seriesInfo.get(post.id),
+    },
+  }));
+}
+
+const { post, newer, older, series } = Astro.props;
+const { Content, headings } = await render(post);
+---
+
+<PostLayout post={post} headings={headings} newer={newer} older={older} series={series}>
+  <Content />
+</PostLayout>

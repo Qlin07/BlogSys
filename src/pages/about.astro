@@ -1,0 +1,146 @@
+---
+/**
+ * 关于：只写这个站点需要说清楚的事。
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Panel from '../components/glass/Panel.astro';
+import siteConfig from '../site.config';
+import { getPosts } from '../lib/posts';
+import '../theme/prose.css';
+
+const posts = await getPosts();
+const { author, title } = siteConfig.site;
+const firstYear = Math.min(...posts.map((post) => post.data.date.getFullYear()));
+---
+
+<BaseLayout title="关于" description={`关于 ${title} 与作者。`}>
+  <div class="page-heading">
+    <h1>关于</h1>
+  </div>
+
+  <div class="about">
+    <Panel thickness="regular" class="about__main">
+      <div class="about__body prose">
+        <p>{author.bio}</p>
+
+        <h2>这里写什么</h2>
+        <p>
+          大多是做完一件事之后回头才想明白的部分：某个决定当时为什么看起来对、代价出在哪里、如果重来会怎么选。偶尔也有正在做的事和读到的书。
+        </p>
+        <p>
+          没有教程，也不打算做入门内容。假设你已经会写代码，正在为某件具体的事情做取舍。
+        </p>
+
+        <h2>这里不写什么</h2>
+        <p>
+          不写没有亲自验证过的结论。如果只是听说，会说明是听说。数字都是当时真实量到的，量不到的地方会留白而不是补一个看起来合理的值。
+        </p>
+
+        <h2>关于这个站点</h2>
+        <p>
+          静态生成的纯 HTML，没有后端、没有数据库、没有评论系统。搜索在浏览器里完成，索引随站点一起发布。没有第三方统计脚本，也没有 Cookie。
+        </p>
+      </div>
+    </Panel>
+
+    <aside class="about__side">
+      <Panel thickness="thin">
+        <dl class="about__facts">
+          <dt>写作</dt>
+          <dd>{author.name}</dd>
+          <dt>联系</dt>
+          <dd><a href={`mailto:${author.email}`}>{author.email}</a></dd>
+          <dt>文章</dt>
+          <dd>{posts.length} 篇，最早一篇写于 {firstYear} 年</dd>
+          <dt>订阅</dt>
+          <dd><a href="/rss.xml">RSS</a></dd>
+        </dl>
+      </Panel>
+
+      <Panel thickness="thin">
+        <ul class="about__links">
+          {
+            siteConfig.social.map((item) => (
+              <li>
+                <a href={item.href} rel={item.href.startsWith('http') ? 'me noopener' : undefined}>
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </Panel>
+    </aside>
+  </div>
+</BaseLayout>
+
+<style>
+  .about {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  .about__body {
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .about__body h2 {
+    font-size: var(--fs-md);
+    margin-top: var(--space-4);
+  }
+
+  .about__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .about__facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-3) var(--space-4);
+    margin: 0;
+    padding: var(--space-5);
+  }
+
+  .about__facts dt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    color: var(--text-dim);
+  }
+
+  .about__facts dd {
+    margin: 0;
+    font-size: var(--fs-sm);
+  }
+
+  .about__links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: var(--space-4) var(--space-5);
+    font-size: var(--fs-sm);
+  }
+
+  .about__links a {
+    color: var(--text-dim);
+  }
+
+  .about__links a:hover {
+    color: var(--signal);
+  }
+
+  @media (max-width: 1024px) {
+    .about {
+      grid-template-columns: 1fr;
+    }
+
+    .about__body {
+      padding: var(--space-5) var(--space-4);
+    }
+  }
+</style>

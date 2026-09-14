@@ -1,0 +1,219 @@
+/**
+ * 正文排版
+ *
+ * 覆盖面仅限 Markdown 渲染出的内容。代码块与引文块是 Markdown 直接产出的元素，
+ * 无法经过 Panel 组件，因此这里显式复用同一套材质 token —— 这是"玻璃只能来自
+ * Panel"这条规则唯一且必要的例外，配方与 glass.css 保持一致。
+ *
+ * 行宽分两档：文字内容 68ch，代码与表格占满面板宽度。
+ * 代码比正文更宽是刻意的 —— 代码不该被正文的行宽限制。
+ */
+
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.prose > p,
+.prose > ul,
+.prose > ol,
+.prose > blockquote,
+.prose > h2,
+.prose > h3,
+.prose > h4 {
+  max-width: var(--measure);
+}
+
+.prose h2 {
+  font-size: var(--fs-lg);
+  margin-top: var(--space-4);
+}
+
+.prose h3 {
+  font-size: var(--fs-md);
+  margin-top: var(--space-2);
+}
+
+.prose p,
+.prose li {
+  text-wrap: pretty;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.4em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.prose li::marker {
+  color: var(--text-dim);
+}
+
+.prose a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+/* ---------- 引文与旁注：全站唯一使用楷体的地方 ---------- */
+
+.prose blockquote {
+  padding: var(--space-4) var(--space-5);
+  background-color: var(--tint-thin);
+  box-shadow: var(--glass-edge);
+  border-radius: var(--radius-control);
+  backdrop-filter: blur(var(--glass-blur-flat)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-flat)) saturate(var(--glass-saturate));
+  font-family: var(--font-note);
+  color: var(--text-dim);
+}
+
+.prose blockquote > * + * {
+  margin-top: var(--space-3);
+}
+
+.prose blockquote p {
+  max-width: none;
+}
+
+/* ---------- 代码 ---------- */
+
+.prose :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-chip);
+  background-color: var(--wash);
+  color: var(--text);
+}
+
+/* Shiki 会给 pre 加上内联背景色，这里必须覆盖才能让代码块成为"比周围更透明"的那一件 */
+.prose pre.astro-code {
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-control);
+  background-color: var(--tint-thin) !important;
+  box-shadow: var(--glass-edge);
+  backdrop-filter: blur(var(--glass-blur-flat)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-flat)) saturate(var(--glass-saturate));
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  tab-size: 2;
+  white-space: pre;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.prose pre.astro-code code {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* 行内高亮（```rust {2,4} 这类语法） */
+.prose .astro-code .line.highlighted {
+  display: inline-block;
+  width: 100%;
+  margin-inline: calc(-1 * var(--space-2));
+  padding-inline: var(--space-2);
+  background-color: color-mix(in oklab, var(--signal) 12%, transparent);
+  border-radius: 3px;
+}
+
+/* ---------- 表格：取舍对比用 ---------- */
+
+.prose table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+
+.prose th,
+.prose td {
+  padding: var(--space-2) var(--space-4) var(--space-2) 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.prose th {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/* ---------- 其他 ---------- */
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: var(--space-4) 0;
+}
+
+.prose img {
+  border-radius: var(--radius-control);
+  box-shadow: var(--glass-edge);
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose del {
+  color: var(--text-dim);
+}
+
+/* ---------- 双主题着色 ---------- */
+/* Shiki 以 CSS 变量输出两套颜色，因此切换主题不需要重新高亮 */
+
+.astro-code,
+.astro-code span {
+  color: var(--shiki-light, currentColor) !important;
+  font-style: var(--shiki-light-font-style, normal) !important;
+  font-weight: var(--shiki-light-font-weight, normal) !important;
+  text-decoration: var(--shiki-light-text-decoration, none) !important;
+}
+
+:root[data-theme='dark'] .astro-code,
+:root[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark, currentColor) !important;
+  font-style: var(--shiki-dark-font-style, normal) !important;
+  font-weight: var(--shiki-dark-font-weight, normal) !important;
+  text-decoration: var(--shiki-dark-text-decoration, none) !important;
+}
+
+/* ---------- 代码复制按钮（由脚本注入，故不能使用组件作用域样式） ---------- */
+
+.prose pre.astro-code {
+  position: relative;
+}
+
+.prose pre.astro-code.has-copy {
+  padding-right: 5rem;
+}
+
+.prose .code-copy {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  padding: 2px var(--space-2);
+  border: 0;
+  border-radius: var(--radius-chip);
+  background-color: var(--tint-thick);
+  box-shadow: var(--glass-edge);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.prose .code-copy:hover {
+  color: var(--text);
+}

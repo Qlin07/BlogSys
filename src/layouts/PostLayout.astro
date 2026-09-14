@@ -1,0 +1,259 @@
+---
+/**
+ * 文章页
+ *
+ * 正文区永远使用最高可读性配置（regular 厚度 + 全亮度文字），
+ * 视觉实验不进入阅读区。代码块是唯一"比周围更透明"的元素。
+ */
+import type { MarkdownHeading } from 'astro';
+import BaseLayout from './BaseLayout.astro';
+import PanelSection from '../components/ui/PanelSection.astro';
+import Panel from '../components/glass/Panel.astro';
+import Toc from '../components/post/Toc.astro';
+import TagChip from '../components/ui/TagChip.astro';
+import siteConfig from '../site.config';
+import type { Post } from '../lib/posts';
+import { formatDate, readingMinutes } from '../lib/posts';
+import '../theme/prose.css';
+
+interface Props {
+  post: Post;
+  headings: MarkdownHeading[];
+  /** 时间上更新的一篇 */
+  newer?: Post;
+  /** 时间上更早的一篇 */
+  older?: Post;
+  series?: { name: string; index: number; total: number };
+}
+
+const { post, headings, newer, older, series } = Astro.props;
+const { title, date, updated, summary, tags } = post.data;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description: summary,
+  datePublished: date.toISOString(),
+  ...(updated ? { dateModified: updated.toISOString() } : {}),
+  author: { '@type': 'Person', name: siteConfig.site.author.name },
+  publisher: { '@type': 'Organization', name: siteConfig.site.title },
+  mainEntityOfPage: new URL(`/posts/${post.id}/`, siteConfig.site.url).href,
+  inLanguage: post.data.lang,
+  keywords: tags.join(', '),
+};
+---
+
+<BaseLayout title={title} description={summary} ogType="article">
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} slot="head" />
+
+  <article class="post" data-pagefind-body>
+    <header class="post__header">
+      <ul class="meta-fields">
+        <li><time datetime={formatDate(date)}>{formatDate(date)}</time></li>
+        <li>{readingMinutes(post)} 分钟</li>
+        {updated && <li>更新于 {formatDate(updated)}</li>}
+        {series && <li>系列「{series.name}」第 {series.index} / {series.total} 篇</li>}
+      </ul>
+
+      <h1 class="post__title">{title}</h1>
+      <p class="post__summary">{summary}</p>
+
+      {
+        tags.length > 0 && (
+          <ul class="post__tags">
+            {tags.map((tag) => (
+              <li>
+                <TagChip tag={tag} />
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </header>
+
+    <div class="post__layout">
+      {
+        /* 目录在 DOM 中前置，窄屏时视觉顺序与 DOM 顺序一致，避免键盘焦点跳来跳去；
+           宽屏用 order 把它放到正文右侧 */
+        siteConfig.features.toc && (
+          <aside class="post__aside">
+            <div class="post__aside-inner">
+              <Toc headings={headings} />
+            </div>
+          </aside>
+        )
+      }
+
+      <PanelSection thickness="regular" label="正文">
+        <div class="prose">
+          <slot />
+        </div>
+      </PanelSection>
+    </div>
+
+    {
+      (newer || older) && (
+        <nav class="post__nav" aria-label="相邻文章">
+          <Panel thickness="thin" radius="panel">
+            <ul class="post__nav-list">
+              {newer && (
+                <li>
+                  <span class="post__nav-label">更新的一篇</span>
+                  <a href={`/posts/${newer.id}/`}>{newer.data.title}</a>
+                </li>
+              )}
+              {older && (
+                <li>
+                  <span class="post__nav-label">更早的一篇</span>
+                  <a href={`/posts/${older.id}/`}>{older.data.title}</a>
+                </li>
+              )}
+            </ul>
+          </Panel>
+        </nav>
+      )
+    }
+  </article>
+</BaseLayout>
+
+<style>
+  .post {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .post__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .post__title {
+    max-width: 24ch;
+  }
+
+  .post__summary {
+    max-width: var(--measure);
+    color: var(--text-dim);
+  }
+
+  .post__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .post__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 15rem;
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  .post__aside {
+    /* 宽屏时排到正文右侧；DOM 顺序仍是前置，供窄屏使用 */
+    order: 1;
+    align-self: stretch;
+  }
+
+  .post__aside-inner {
+    position: sticky;
+    top: 92px;
+  }
+
+  .post__nav-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5);
+    list-style: none;
+    margin: 0;
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .post__nav-list > li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  .post__nav-label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--text-dim);
+  }
+
+  .post__nav-list a {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .post__nav-list a:hover {
+    color: var(--signal);
+  }
+
+  @media (max-width: 1024px) {
+    .post__layout {
+      grid-template-columns: 1fr;
+    }
+
+    /* 单列时目录在正文之前，与 DOM 顺序一致，并且不占满屏高 */
+    .post__aside {
+      order: 0;
+      max-height: 42vh;
+      overflow-y: auto;
+    }
+
+    .post__aside-inner {
+      position: static;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .post__nav-list {
+      grid-template-columns: 1fr;
+      padding: var(--space-4);
+    }
+  }
+</style>
+
+<script>
+  // 代码复制：逐个代码块注入按钮，共用一个脚本
+  const blocks = document.querySelectorAll<HTMLPreElement>('.prose pre.astro-code');
+
+  for (const block of blocks) {
+    const code = block.querySelector('code');
+    if (!code) continue;
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'code-copy';
+    button.textContent = '复制';
+    button.setAttribute('aria-label', '复制代码');
+
+    block.classList.add('has-copy');
+    block.appendChild(button);
+
+    let resetTimer = 0;
+
+    button.addEventListener('click', async () => {
+      let label = '已复制';
+      try {
+        await navigator.clipboard.writeText(code.textContent ?? '');
+      } catch {
+        label = '复制失败';
+      }
+
+      button.textContent = label;
+      window.clearTimeout(resetTimer);
+      resetTimer = window.setTimeout(() => {
+        button.textContent = '复制';
+      }, 2000);
+    });
+  }
+</script>
