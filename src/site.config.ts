@@ -101,8 +101,8 @@ export const siteConfig: SiteConfig = {
     url: 'https://qlin07.github.io/BlogSys/',
     author: {
       name: 'qlin07',
-      email: 'you@example.com',
-      bio: '从网络安全到游戏开发，只有我顶着二次元头像但不是大佬。',
+      email: 'man399640@gmail.com',
+      bio: '从网络安全到游戏开发，只有我顶着二次元头像却不是大佬。ORZ',
     },
     // ↑↑↑ 上线前需要替换的字段 ↑↑↑
     lang: 'zh-CN',
@@ -117,8 +117,12 @@ export const siteConfig: SiteConfig = {
     { label: '关于', href: '/about' },
   ],
 
-  social: [{ label: 'GitHub', href: 'https://github.com/' }],
-
+  social: [ { label: 'GitHub', href: 'https://github.com/qlin07/' },
+            { label: 'Email', href: 'mailto:man399640@gmail.com' },
+          //{ label: 'Twitter', href: 'https://twitter.com/qlin07' },
+            { label: 'Bilibili', href: 'https://space.bilibili.com/491692822' },
+  ],
+  
   home: [
     {
       type: 'statement',
