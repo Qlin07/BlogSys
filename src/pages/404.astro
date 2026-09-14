@@ -4,6 +4,7 @@
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Panel from '../components/glass/Panel.astro';
+import { withBase } from '../lib/paths';
 ---
 
 <BaseLayout title="页面不存在" description="这个地址没有对应的内容。" noindex>
@@ -15,10 +16,10 @@ import Panel from '../components/glass/Panel.astro';
           可能是文章改过标题、链接少了一段，或者本来就写错了。从下面这几个地方可以继续找。
         </p>
         <ul class="not-found__links">
-          <li><a href="/posts">全部文章</a></li>
-          <li><a href="/archive">按年份归档</a></li>
-          <li><a href="/tags">按标签找</a></li>
-          <li><a href="/">回到首页</a></li>
+          <li><a href={withBase('/posts')}>全部文章</a></li>
+          <li><a href={withBase('/archive')}>按年份归档</a></li>
+          <li><a href={withBase('/tags')}>按标签找</a></li>
+          <li><a href={withBase('/')}>回到首页</a></li>
         </ul>
       </div>
     </Panel>

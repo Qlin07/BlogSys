@@ -4,6 +4,7 @@
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PanelSection from '../../components/ui/PanelSection.astro';
+import { withBase } from '../../lib/paths';
 import { collectSeries, formatDate, getPosts, postHref, readingMinutes } from '../../lib/posts';
 
 export async function getStaticPaths() {
@@ -21,7 +22,7 @@ const { name, posts } = Astro.props;
 <BaseLayout title={`系列：${name}`} description={`系列「${name}」共 ${posts.length} 篇，按阅读顺序排列。`}>
   <div class="page-heading">
     <h1>{name}</h1>
-    <p>共 {posts.length} 篇，按阅读顺序排列。<a href="/series">看全部系列</a></p>
+    <p>共 {posts.length} 篇，按阅读顺序排列。<a href={withBase('/series')}>看全部系列</a></p>
   </div>
 
   <PanelSection label={`系列 ${name}`}>

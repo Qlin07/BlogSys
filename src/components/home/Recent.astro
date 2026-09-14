@@ -4,6 +4,7 @@
  */
 import PanelSection from '../ui/PanelSection.astro';
 import PostRow from '../post/PostRow.astro';
+import { withBase } from '../../lib/paths';
 import type { Post } from '../../lib/posts';
 
 interface Props {
@@ -21,7 +22,7 @@ const { heading, posts, total, enterIndex = 0 } = Astro.props;
     {posts.map((post) => <PostRow post={post} />)}
   </ul>
 
-  <a class="recent__more" href="/archive">全部 {total} 篇</a>
+  <a class="recent__more" href={withBase('/archive')}>全部 {total} 篇</a>
 </PanelSection>
 
 <style>

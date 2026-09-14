@@ -53,6 +53,7 @@ export interface SiteConfig {
   features: {
     search: boolean;
     toc: boolean;
+    /** 以下两项已声明但尚未接线，改动它们没有任何效果，见 README */
     katex: boolean;
     comments: boolean;
   };

@@ -13,7 +13,7 @@ import Toc from '../components/post/Toc.astro';
 import TagChip from '../components/ui/TagChip.astro';
 import siteConfig from '../site.config';
 import type { Post } from '../lib/posts';
-import { formatDate, readingMinutes } from '../lib/posts';
+import { formatDate, postHref, readingMinutes } from '../lib/posts';
 import '../theme/prose.css';
 
 interface Props {
@@ -38,7 +38,8 @@ const jsonLd = {
   ...(updated ? { dateModified: updated.toISOString() } : {}),
   author: { '@type': 'Person', name: siteConfig.site.author.name },
   publisher: { '@type': 'Organization', name: siteConfig.site.title },
-  mainEntityOfPage: new URL(`/posts/${post.id}/`, siteConfig.site.url).href,
+  // 同 BaseLayout：用 Astro 解析后的 site，部署在子路径时才和 sitemap 一致
+  mainEntityOfPage: new URL(postHref(post), Astro.site ?? new URL(siteConfig.site.url)).href,
   inLanguage: post.data.lang,
   keywords: tags.join(', '),
 };
@@ -100,13 +101,13 @@ const jsonLd = {
               {newer && (
                 <li>
                   <span class="post__nav-label">更新的一篇</span>
-                  <a href={`/posts/${newer.id}/`}>{newer.data.title}</a>
+                  <a href={postHref(newer)}>{newer.data.title}</a>
                 </li>
               )}
               {older && (
                 <li>
                   <span class="post__nav-label">更早的一篇</span>
-                  <a href={`/posts/${older.id}/`}>{older.data.title}</a>
+                  <a href={postHref(older)}>{older.data.title}</a>
                 </li>
               )}
             </ul>

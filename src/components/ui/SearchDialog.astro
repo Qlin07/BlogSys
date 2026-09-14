@@ -6,6 +6,10 @@
  * 首次打开时才动态注入的 —— 开发环境不会因此报 404，也不占用首屏预算。
  */
 import Panel from '../glass/Panel.astro';
+import { withBase } from '../../lib/paths';
+
+/** 子路径部署时 pagefind 的资源也在子路径下，通过属性传给内联脚本 */
+const pagefindBase = withBase('/pagefind/');
 ---
 
 <div class="search">
@@ -14,7 +18,12 @@ import Panel from '../glass/Panel.astro';
     <kbd class="search-trigger__key" data-search-key aria-hidden="true">Ctrl K</kbd>
   </button>
 
-  <dialog class="search-dialog" data-search-dialog aria-label="搜索文章">
+  <dialog
+    class="search-dialog"
+    data-search-dialog
+    data-pagefind-base={pagefindBase}
+    aria-label="搜索文章"
+  >
     <Panel thickness="thick" backdrop="deep" radius="panel">
       <div class="search-dialog__body">
         <div class="search-dialog__head">
@@ -148,17 +157,21 @@ import Panel from '../glass/Panel.astro';
       if (assetsRequested) return;
       assetsRequested = true;
 
+      // base 由组件写进 data 属性，脚本不硬编码路径
+      var bundle = dialog.getAttribute('data-pagefind-base') || '/pagefind/';
+
       var link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = '/pagefind/pagefind-ui.css';
+      link.href = bundle + 'pagefind-ui.css';
       document.head.appendChild(link);
 
       var script = document.createElement('script');
-      script.src = '/pagefind/pagefind-ui.js';
+      script.src = bundle + 'pagefind-ui.js';
       script.onload = function () {
         if (!window.PagefindUI || !root) return;
         new window.PagefindUI({
           element: root,
+          bundlePath: bundle,
           showSubResults: true,
           showImages: false,
           translations: {

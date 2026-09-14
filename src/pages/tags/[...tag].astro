@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PanelSection from '../../components/ui/PanelSection.astro';
 import PostRow from '../../components/post/PostRow.astro';
+import { withBase } from '../../lib/paths';
 import { collectTags, getPosts } from '../../lib/posts';
 
 export async function getStaticPaths() {
@@ -23,7 +24,7 @@ const { tag, posts } = Astro.props;
 <BaseLayout title={`标签：${tag}`} description={`标签「${tag}」下的全部文章，共 ${posts.length} 篇。`}>
   <div class="page-heading">
     <h1>{tag}</h1>
-    <p>共 {posts.length} 篇。<a href="/tags">看全部标签</a></p>
+    <p>共 {posts.length} 篇。<a href={withBase('/tags')}>看全部标签</a></p>
   </div>
 
   <PanelSection label={`标签 ${tag} 下的文章`}>

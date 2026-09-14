@@ -1,0 +1,69 @@
+# 把站点发布到 GitHub Pages。
+#
+# 首次使用前需要做一次手动设置（只需一次）：
+#   仓库 Settings → Pages → Build and deployment → Source 选 "GitHub Actions"
+# 不做这一步，下面"配置 Pages"之后的步骤会失败并提示 Pages 未启用。
+
+name: 部署到 GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # 允许在 Actions 页面手动触发一次，用于改完配置后重发
+  workflow_dispatch:
+
+# GITHUB_TOKEN 的权限：读代码、写 Pages、取 OIDC token
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同时只跑一个部署；已经在跑的不打断，排队等它结束
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # 与本地开发一致，避免"本地能跑、CI 报错"
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      # DEPLOY_TARGET 让 astro.config.mjs 推导出 base：项目页服务在 /<仓库名>/ 下，
+      # 不设的话站内链接与静态资源会全部 404。
+      #
+      # 这一步同时会跑 scripts/verify-contrast.mjs —— 对比度不达标就直接失败，
+      # 坏掉的配色发不出去。
+      - name: 构建
+        run: npm run build
+        env:
+          DEPLOY_TARGET: github-pages
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上传产物
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: 发布
+        id: deploy
+        uses: actions/deploy-pages@v4

@@ -2,6 +2,8 @@
 /**
  * 标签：只有一个圆角层级，无图标、无编号 —— 标签不是序列。
  */
+import { withBase } from '../../lib/paths';
+
 interface Props {
   tag: string;
   count?: number;
@@ -10,7 +12,7 @@ interface Props {
 const { tag, count } = Astro.props;
 ---
 
-<a class="tag" href={`/tags/${tag}/`}>
+<a class="tag" href={withBase(`/tags/${tag}/`)}>
   {tag}
   {count !== undefined && <span class="tag__count">{count}</span>}
 </a>

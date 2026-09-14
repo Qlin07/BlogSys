@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { withBase } from './paths';
 
 export type Post = CollectionEntry<'posts'>;
 
@@ -9,7 +10,7 @@ export async function getPosts(): Promise<Post[]> {
 }
 
 export function postHref(post: Post): string {
-  return `/posts/${post.id}/`;
+  return withBase(`/posts/${post.id}/`);
 }
 
 /** 日期只作为结构性数据出现，统一用 mono 可对齐的定长格式 */

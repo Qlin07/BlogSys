@@ -6,11 +6,13 @@
  * 而不是装饰。仅改变不透明度，不改变模糊半径：避免滚动中重算合成层。
  */
 import siteConfig from '../../site.config';
+import { stripBase, withBase } from '../../lib/paths';
 import Panel from '../glass/Panel.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import SearchDialog from './SearchDialog.astro';
 
-const pathname = Astro.url.pathname;
+// Astro.url.pathname 带 base 前缀，配置里的 href 不带 —— 先还原再比较
+const pathname = stripBase(Astro.url.pathname);
 const isCurrent = (href: string) =>
   href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
 ---
@@ -18,14 +20,14 @@ const isCurrent = (href: string) =>
 <header class="site-header" data-site-header data-scrolled="false">
   <Panel thickness="thin" backdrop="deep" radius="none">
     <div class="header-inner">
-      <a class="brand" href="/">{siteConfig.site.title}</a>
+      <a class="brand" href={withBase('/')}>{siteConfig.site.title}</a>
 
       <nav class="nav" aria-label="主导航">
         <ul>
           {
             siteConfig.nav.map((item) => (
               <li>
-                <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                <a href={withBase(item.href)} aria-current={isCurrent(item.href) ? 'page' : undefined}>
                   {item.label}
                 </a>
               </li>
@@ -36,7 +38,7 @@ const isCurrent = (href: string) =>
 
       <div class="tools">
         {siteConfig.features.search && <SearchDialog />}
-        <a class="rss-link" href="/rss.xml" title="订阅 RSS">RSS</a>
+        <a class="rss-link" href={withBase('/rss.xml')} title="订阅 RSS">RSS</a>
         <ThemeToggle />
       </div>
     </div>

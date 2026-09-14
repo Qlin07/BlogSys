@@ -5,6 +5,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Panel from '../components/glass/Panel.astro';
 import siteConfig from '../site.config';
+import { withBase } from '../lib/paths';
 import { getPosts } from '../lib/posts';
 import '../theme/prose.css';
 
@@ -53,7 +54,7 @@ const firstYear = Math.min(...posts.map((post) => post.data.date.getFullYear()))
           <dt>文章</dt>
           <dd>{posts.length} 篇，最早一篇写于 {firstYear} 年</dd>
           <dt>订阅</dt>
-          <dd><a href="/rss.xml">RSS</a></dd>
+          <dd><a href={withBase('/rss.xml')}>RSS</a></dd>
         </dl>
       </Panel>
 
@@ -62,7 +63,10 @@ const firstYear = Math.min(...posts.map((post) => post.data.date.getFullYear()))
           {
             siteConfig.social.map((item) => (
               <li>
-                <a href={item.href} rel={item.href.startsWith('http') ? 'me noopener' : undefined}>
+                <a
+                  href={withBase(item.href)}
+                  rel={item.href.startsWith('http') ? 'me noopener' : undefined}
+                >
                   {item.label}
                 </a>
               </li>

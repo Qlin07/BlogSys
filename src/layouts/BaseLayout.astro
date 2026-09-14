@@ -20,6 +20,7 @@ import '../theme/base.css';
 import '../theme/glass.css';
 
 import siteConfig from '../site.config';
+import { withBase } from '../lib/paths';
 import SiteHeader from '../components/ui/SiteHeader.astro';
 import SiteFooter from '../components/ui/SiteFooter.astro';
 
@@ -36,7 +37,13 @@ const { title, description, ogType = 'website', noindex = false } = Astro.props;
 const pageTitle = title ? `${title} · ${siteConfig.site.title}` : siteConfig.site.title;
 const pageDescription = description ?? siteConfig.site.description;
 
-const canonical = new URL(Astro.url.pathname, siteConfig.site.url).href;
+/**
+ * 必须用 Astro 解析后的 site，而不是 siteConfig.site.url：
+ * 部署在子路径时 astro.config.mjs 会改写 site，直接读配置会导致 canonical
+ * 指向旧域名，而 sitemap 用的是新域名 —— 实测踩过这个不一致。
+ */
+const siteUrl = Astro.site ?? new URL(siteConfig.site.url);
+const canonical = new URL(Astro.url.pathname, siteUrl).href;
 
 // 背景媒体：只有配置了图片/视频、且当前页面在生效范围内时才开启
 const bg = siteConfig.background;
@@ -81,9 +88,18 @@ const themeInit = `(function(){var d=document.documentElement;var mode=${JSON.st
     <meta name="description" content={pageDescription} />
     {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
-    {siteConfig.features.search && <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />}
+    {
+      siteConfig.features.search && (
+        <link rel="stylesheet" href={withBase('/pagefind/pagefind-ui.css')} />
+      )
+    }
 
-    <link rel="alternate" type="application/rss+xml" title={siteConfig.site.title} href="/rss.xml" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={siteConfig.site.title}
+      href={withBase('/rss.xml')}
+    />
     <meta name="generator" content={Astro.generator} />
 
     <meta property="og:type" content={ogType} />
@@ -105,15 +121,15 @@ const themeInit = `(function(){var d=document.documentElement;var mode=${JSON.st
     <div class="substrate" aria-hidden="true">
       {
         backdropOn && bg.image && (
-          <img class="substrate__media" src={bg.image} alt="" decoding="async" />
+          <img class="substrate__media" src={withBase(bg.image)} alt="" decoding="async" />
         )
       }
       {
         backdropOn && bg.video && (
           <video
             class="substrate__media substrate__video"
-            src={bg.video}
-            poster={bg.image ?? undefined}
+            src={withBase(bg.video)}
+            poster={bg.image ? withBase(bg.image) : undefined}
             autoplay
             muted
             loop

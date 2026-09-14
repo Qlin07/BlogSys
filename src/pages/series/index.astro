@@ -4,6 +4,7 @@
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PanelSection from '../../components/ui/PanelSection.astro';
+import { withBase } from '../../lib/paths';
 import { collectSeries, formatDate, getPosts, postHref } from '../../lib/posts';
 
 const posts = await getPosts();
@@ -32,7 +33,9 @@ const series = collectSeries(posts);
             </li>
           ))}
         </ol>
-        <a class="series-more" href={`/series/${group.name}/`}>读整个系列（{group.posts.length} 篇）</a>
+        <a class="series-more" href={withBase(`/series/${group.name}/`)}>
+          读整个系列（{group.posts.length} 篇）
+        </a>
       </PanelSection>
     ))
   }

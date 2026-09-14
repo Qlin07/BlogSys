@@ -4,6 +4,7 @@
  * 全站唯一"花力气"的地方是面板材质，页脚只做收尾。
  */
 import siteConfig from '../../site.config';
+import { withBase } from '../../lib/paths';
 
 const year = new Date().getFullYear();
 ---
@@ -19,7 +20,10 @@ const year = new Date().getFullYear();
       {
         siteConfig.social.map((item) => (
           <li>
-            <a href={item.href} rel={item.href.startsWith('http') ? 'me noopener' : undefined}>
+            <a
+              href={withBase(item.href)}
+              rel={item.href.startsWith('http') ? 'me noopener' : undefined}
+            >
               {item.label}
             </a>
           </li>
