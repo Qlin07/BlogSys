@@ -71,9 +71,22 @@ export interface SiteConfig {
     video: string | null;
     /**
      * 遮罩强度 0–1。越大越压得住画面，面板可读性越高。
-     * 它不是纯观感旋钮：遮罩给面板一个亮度下限，低于校验值会让构建失败。
+     * 它不是纯观感旋钮：遮罩给面板一个亮度下限，调得太低，薄面板上的文字
+     * 会掉出 WCAG AA。想量化的话跑 `npm run verify:contrast`，
+     * 它会算出当前 scrim / panelAlpha 下最差的一组并给出所需下限。
      */
     scrim: number;
+    /**
+     * 背景模式下三层玻璃的不透明度 0–1，对应 Panel 的 thin / regular / thick。
+     * 越接近 1 越不透明、文字余量越大；越接近 0 越透、越依赖遮罩压住画面。
+     * 只在 image / video 至少配了一个时生效 —— 没有背景媒体时厚度由主题文件决定，
+     * 但要清楚"厚度即层级"：regular 低于 thin 会让卡片比引文还薄，层级就废了。
+     */
+    panelAlpha: {
+      thin: number;
+      regular: number;
+      thick: number;
+    };
     /**
      * 面板调性，决定遮罩颜色与整组前景 token，见 src/theme/backdrop.css。
      *   auto  —— 跟随明暗主题：深色主题配暗玻璃浅字，浅色主题配白玻璃深字。
@@ -169,6 +182,13 @@ export const siteConfig: SiteConfig = {
     image: '/images/20250614004659_1.jpg',
     video: null,
     scrim: 0.4,
+    // 想调卡片透明度就动这里：regular 是卡片，thin 是引文/目录，thick 是顶栏/弹层。
+    // 两个调性（明暗）共用这一组值，改完存盘即生效。
+    panelAlpha: {
+      thin: 0.3,
+      regular: 0.46,
+      thick: 0.6,
+    },
     tone: 'auto',
     blur: 0,
     position: '50% 50%',

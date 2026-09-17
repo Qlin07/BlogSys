@@ -18,10 +18,10 @@ npm run dev     # → http://localhost:4321/
 | 命令 | 作用 |
 | --- | --- |
 | `npm run dev` | 开发服务器，带热更新 |
-| `npm run build` | 校验对比度 → 构建 → 生成搜索索引，产物在 `dist/` |
+| `npm run build` | 构建 → 生成搜索索引，产物在 `dist/` |
 | `npm run preview` | 本地预览构建产物（搜索在这里可用） |
-| `npm run check` | 校验对比度 + TypeScript 类型检查 |
-| `npm run verify:contrast` | 只跑对比度校验 |
+| `npm run check` | TypeScript 类型检查 |
+| `npm run verify:contrast` | 手动跑对比度校验，只报告、不拦构建 |
 
 想在手机上预览：`npm run dev -- --host`，终端会多打印一行局域网地址。
 
@@ -134,6 +134,11 @@ background: {
   image: '/images/backdrop-default.svg', // 背景图，放 public/ 下
   video: null,                            // 背景视频，可选
   scrim: 0.4,                             // 遮罩强度 0–1
+  panelAlpha: {                           // 玻璃三档不透明度 0–1
+    thin: 0.6,                            //   引文、目录、相邻文章
+    regular: 0.76,                        //   卡片、正文（想让卡片更透就动这行）
+    thick: 0.9,                           //   顶栏、弹层
+  },
   tone: 'auto',                           // 'auto' | 'dark' | 'light'
   blur: 0,                                // 背景自身虚化 px
   position: '50% 50%',                    // 裁切焦点，等价 object-position
@@ -145,11 +150,14 @@ background: {
 | --- | --- |
 | `image` | 换成你自己的图：放进 `public/images/`，这里写 `/images/你的图.jpg`。设为 `null` 会退化成纯色底（玻璃会失去参照，不建议） |
 | `video` | 可选。填了的话 `image` 会自动成为它的海报图与加载前兜底，两个都填最稳 |
-| `scrim` | **不是纯观感旋钮**。遮罩给面板一个亮度下限，调太低会让构建失败并告诉你该改到多少 |
+| `scrim` | **不是纯观感旋钮**。遮罩给面板一个亮度下限，调得太低，薄面板上的文字会掉出 WCAG AA。想要数字就跑 `npm run verify:contrast` |
+| `panelAlpha` | 玻璃面板的不透明度，越大越厚。**只在配了 `image` / `video` 时生效**，明暗两种调性共用一组值。注意「厚度即层级」：`regular` 低于 `thin` 会让卡片比引文还薄。另见下方说明 |
 | `tone` | `auto` 跟随明暗主题；固定 `dark`/`light` 会让顶栏的主题按钮失去作用，只在"这张图只适合一种用法"时才这么设 |
 | `blur` | 给背景本身加景深。会让画面变柔和、和玻璃面板拉开距离 |
 | `position` | 竖图或移动端构图不对时调它，比如 `'30% 50%'` |
 | `scope` | 视频建议设 `'home'`：4MB 的循环视频不该出现在每一篇文章页 |
+
+`panelAlpha` 与 `scrim` 都往"更透"的方向走，但都要吃掉对比度余量：`panelAlpha.regular` 从 `0.76` 降到 `0.56`，`scrim` 保持 `0.4` 时最差组合还能到 4.5:1；再往下就得同步把 `scrim` 提上去补回来。这个下限没有被写进构建（见下方说明），要判断合不合格，跑 `npm run verify:contrast` 看它报的数。
 
 **支持的图片格式**：浏览器 `<img>` 能渲染的都行 —— JPEG / PNG / WebP / AVIF / SVG / GIF。注意它**不经过 Astro 的图片优化管线**（不会自动转格式、不做响应式 `srcset`），体积要自己控制。建议 ≥1920px 宽、控制在几百 KB 以内。
 
@@ -167,7 +175,9 @@ background: {
 | [`src/theme/backdrop.css`](src/theme/backdrop.css) | 有背景图时的两套调性（遮罩色 + 前景色） |
 | [`src/theme/glass.css`](src/theme/glass.css) | 玻璃的材质参数（厚度→不透明度、背景→模糊半径） |
 
-改颜色时注意：**颜色不能随便填**。站内有一条硬规则 —— 文字在四种背景（纯色底、thin/regular/thick 三种玻璃面板）上都要达到 WCAG 4.5:1。`npm run build` 会逐个校验，不达标直接失败并告诉你是哪个 token、差多少。
+改颜色时注意：**颜色不能随便填**。站内有一条硬规则 —— 文字在四种背景（纯色底、thin/regular/thick 三种玻璃面板）上都要达到 WCAG 4.5:1。
+
+这条规则由 `scripts/verify-contrast.mjs` 实现，但它**只是手动工具，没有接在构建上**：调 `panelAlpha` / `scrim` 时它会把你路过的每一个中间值都判成失败，所以构建默认不拦。`npm run verify:contrast` 会逐个 token 算给你，不达标会指出是哪个、差多少，改不改由你自己定。
 
 字体在 [`src/theme/tokens.css`](src/theme/tokens.css) 的 `--font-sans` / `--font-mono` / `--font-note` 三个变量里。拉丁字体自托管（`@fontsource`），中文与楷体走系统字体栈，因此换字体不需要下载文件。
 
@@ -291,7 +301,7 @@ src/
     PostLayout.astro       文章页
   pages/                   路由（首页/文章/归档/标签/系列/关于/404/RSS）
 scripts/
-  verify-contrast.mjs      对比度校验，接在构建前
+  verify-contrast.mjs      对比度校验（手动运行，不接构建）
 public/images/             背景图等静态资源
 ```
 

@@ -9,11 +9,14 @@
  *        panel = α_tint + α_scrim − α_tint · α_scrim
  *
  *      遮罩不够强时，最薄的 thin 面板会击穿 4.5:1，因此下限由
- *      scripts/verify-contrast.mjs 反解并校验，配置低于它构建会失败。
+ *      scripts/verify-contrast.mjs 反解并打印 —— 它只报数，不再拦构建。
  *
  *   2. 调性（tone）整组覆盖前景 token。site.config.ts 里 tone 取 auto 时，
  *      BaseLayout 的内联脚本会让它跟随明暗主题（dark 主题→dark 调性）；
  *      取 dark / light 时则固定不变，用于"这张图只适合一种用法"的情况。
+ *
+ * 数值只有一处来源：遮罩强度与三层面板的 alpha 都由 site.config.ts 注入成
+ * --backdrop-scrim-alpha / --panel-alpha-*，这个文件只声明调性与颜色。
  *
  * 选择器写 html[data-backdrop][data-backdrop-tone='dark']（0,2,1），
  * 刻意压过主题文件的 :root[data-theme='light']（0,2,0），因此不依赖导入顺序。
@@ -41,8 +44,9 @@ html[data-backdrop] {
 
 /* ---------- 暗调：照片的默认选择 ---------- */
 /* 遮罩压暗 → 面板以暗色为主 → 文字提亮。
-   面板 alpha 比常规主题高（0.6 / 0.76 / 0.9）：玻璃越薄，可控的动态范围越窄，
-   次级文字越没有余量 —— 这是透明面板的固有代价，不是可以调掉的参数。 */
+   面板 alpha 默认比常规主题高（0.6 / 0.76 / 0.9，来自 site.config.ts 的
+   background.panelAlpha）：玻璃越薄，可控的动态范围越窄，次级文字越没有余量 ——
+   这是透明面板的固有代价，调 panelAlpha 只是在通透与余量之间换位置。 */
 
 html[data-backdrop][data-backdrop-tone='dark'] {
   color-scheme: dark;
@@ -62,9 +66,9 @@ html[data-backdrop][data-backdrop-tone='dark'] {
   --wash: rgb(255 255 255 / 0.1);
   --wash-strong: rgb(255 255 255 / 0.16);
 
-  --tint-thin: rgb(10 20 26 / 0.6);
-  --tint-regular: rgb(10 20 26 / 0.76);
-  --tint-thick: rgb(10 20 26 / 0.9);
+  --tint-thin: rgb(10 20 26 / var(--panel-alpha-thin, 0.6));
+  --tint-regular: rgb(10 20 26 / var(--panel-alpha-regular, 0.76));
+  --tint-thick: rgb(10 20 26 / var(--panel-alpha-thick, 0.9));
 
   --glass-edge:
     inset 0 1px 0 rgb(255 255 255 / 0.14), inset 0 0 0 1px rgb(255 255 255 / 0.1);
@@ -94,9 +98,9 @@ html[data-backdrop][data-backdrop-tone='light'] {
   --wash: rgb(20 28 34 / 0.07);
   --wash-strong: rgb(20 28 34 / 0.12);
 
-  --tint-thin: rgb(255 255 255 / 0.6);
-  --tint-regular: rgb(255 255 255 / 0.76);
-  --tint-thick: rgb(255 255 255 / 0.9);
+  --tint-thin: rgb(255 255 255 / var(--panel-alpha-thin, 0.6));
+  --tint-regular: rgb(255 255 255 / var(--panel-alpha-regular, 0.76));
+  --tint-thick: rgb(255 255 255 / var(--panel-alpha-thick, 0.9));
 
   --glass-edge:
     inset 0 1px 0 rgb(255 255 255 / 0.8), inset 0 0 0 1px rgb(255 255 255 / 0.45);

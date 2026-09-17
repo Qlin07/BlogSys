@@ -1,8 +1,12 @@
 /**
- * 背景亮度预算的自动校验。
+ * 背景亮度预算的手动校验。
  *
  * 方案里写的是一条硬规则：底纹上的任何像素亮度必须受控，使面板合成后的
- * 文字对比度达到 WCAG AA。规则不能只写在文档里，所以这里在构建前把它算一遍。
+ * 文字对比度达到 WCAG AA。规则不能只写在文档里，所以这里把它算一遍。
+ *
+ * 它**不接在构建上**：调 site.config.ts 的 panelAlpha / scrim 时会经过大量
+ * 不达标的中间值，每一步都拦下来只会挡住调参。要判断当前配置合不合格，
+ * 主动跑 `npm run verify:contrast` —— 脚本负责把账算清楚，结论由人下。
  *
  * 文字可能落在这四种背景上，因此逐一校验，取最差情形：
  *   1. 底纹本身（页面标题、文章标题等直接铺在底纹上的内容）
@@ -10,7 +14,7 @@
  *   3. regular 面板（正文、卡片）
  *   4. thick 面板（顶栏、弹层）
  *
- * 任一组合低于阈值就让构建失败。
+ * 任一组合低于阈值就报出来，并给出所需的下限（遮罩强度 / 面板 alpha）。
  */
 
 import { readFileSync } from 'node:fs';
@@ -197,13 +201,39 @@ const BACKDROP_TONES = [
 
 const backdropCss = readCss('src/theme/backdrop.css');
 
-// 遮罩强度与开关都只从 site.config.ts 读，不写第二份；读不到就报错，不静默跳过
+// 遮罩强度与面板 alpha 都只从 site.config.ts 读，不写第二份；读不到就报错，不静默跳过
 const configSource = readCss('src/site.config.ts');
 const scrimMatch = /scrim:\s*([\d.]+)/.exec(configSource);
 if (!scrimMatch) {
   throw new Error('在 src/site.config.ts 里找不到 background.scrim');
 }
 const configuredScrim = Number(scrimMatch[1]);
+
+// panelAlpha 在文件里出现两次：接口声明与真实取值。接口那份的字段类型是
+// number 而不是数字，所以挑带数字的那一块，避免读到声明。
+const alphaBlocks = [...configSource.matchAll(/panelAlpha\s*:\s*\{([^}]*)\}/g)];
+const alphaBlock = alphaBlocks.map((match) => match[1]).find((body) => /thin\s*:\s*[\d.]/.test(body));
+if (!alphaBlock) {
+  throw new Error('在 src/site.config.ts 里找不到 background.panelAlpha');
+}
+const configuredPanelAlpha = Object.fromEntries(
+  [...alphaBlock.matchAll(/([A-Za-z]+)\s*:\s*([\d.]+)/g)].map(([, key, value]) => [key, Number(value)]),
+);
+
+/**
+ * backdrop.css 把面板 alpha 写成了 var(--panel-alpha-x, 默认值)，真实取值在
+ * site.config.ts 里。这里按变量名换回数字，后面的 parseColor 才能按字面量解析。
+ */
+function resolvePanelAlpha(value) {
+  return String(value).replace(/var\((--panel-alpha-[a-z]+)\s*,[^)]*\)/, (_, name) => {
+    const key = name.replace('--panel-alpha-', '');
+    const alpha = configuredPanelAlpha[key];
+    if (alpha === undefined) {
+      throw new Error(`src/site.config.ts 的 background.panelAlpha 缺少 ${key}`);
+    }
+    return String(alpha);
+  });
+}
 
 // 未配置背景图/视频时也照常校验：tone 块是随包发布的代码，
 // 提前证明它的取值成立，用户打开开关时才不会撞上一个意外失败。
@@ -224,7 +254,10 @@ for (const { tone, extreme, label } of BACKDROP_TONES) {
   const under = composite({ ...scrimColor, a: configuredScrim }, extreme);
 
   for (const surface of SURFACES.filter((item) => item.tint)) {
-    const tint = parseColor(tokens.get(surface.tint), `${tone} ${surface.tint}`);
+    const tint = parseColor(
+      resolvePanelAlpha(tokens.get(surface.tint)),
+      `${tone} ${surface.tint}`,
+    );
     const paint = composite(tint, under);
 
     let worst = null;

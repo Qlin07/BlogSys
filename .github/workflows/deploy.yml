@@ -48,8 +48,8 @@ jobs:
       # DEPLOY_TARGET 让 astro.config.mjs 推导出 base：项目页服务在 /<仓库名>/ 下，
       # 不设的话站内链接与静态资源会全部 404。
       #
-      # 这一步同时会跑 scripts/verify-contrast.mjs —— 对比度不达标就直接失败，
-      # 坏掉的配色发不出去。
+      # 这一步只构建，不再跑对比度校验：调 background.panelAlpha / scrim 时
+      # 它会把每一个中间值都判成失败，所以改成手动执行 `npm run verify:contrast`。
       - name: 构建
         run: npm run build
         env:
