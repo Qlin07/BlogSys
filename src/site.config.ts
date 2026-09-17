@@ -186,8 +186,8 @@ export const siteConfig: SiteConfig = {
     // 两个调性（明暗）共用这一组值，改完存盘即生效。
     panelAlpha: {
       thin: 0.3,
-      regular: 0.46,
-      thick: 0.6,
+      regular: 0.4,
+      thick: 0.5,
     },
     tone: 'auto',
     blur: 0,
