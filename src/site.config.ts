@@ -166,7 +166,7 @@ export const siteConfig: SiteConfig = {
   background: {
     // 换成你自己的图：把文件放进 public/images/，再改下面这一行。
     // 该图为 null 时退化为纯色底 —— 玻璃会失去可读的"厚度"参照，不建议。
-    image: '/images/backdrop-default.svg',
+    image: '/images/20250614004659_1.jpg',
     video: null,
     scrim: 0.4,
     tone: 'auto',
