@@ -24,7 +24,7 @@ class Dog {
 private:
     int food;
 public:
-    Dog(int amount) : food(amount) {} //创建类时必须进行的初始化，这里是给狗的食物确定一个初始值。
+    Dog(int amount) : food(amount) {} //创建对象时必须进行的初始化，这里是给狗的食物确定一个初始值。
     //当然不写就不用初始化了，这里只是为了展示用法
     int age;
     int amountOfDog() {
