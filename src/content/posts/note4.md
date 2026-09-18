@@ -1,5 +1,5 @@
 ---
-title: C++学习笔记4
+title: C++:内存布局
 date: 2026-09-17
 summary: C++面向对象的内存布局。
 tags:
