@@ -7,7 +7,7 @@ tags:
   - 面向对象
   - 学习
 series: C++ 
-order: 1
+order: 2
 ---
 
 # C++面向对象之封装

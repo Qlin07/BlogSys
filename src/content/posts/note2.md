@@ -7,7 +7,7 @@ tags:
   - 面向对象
   - 学习
 series: C++ 
-order: 2
+order: 3
 ---
 
 # C++面向对象之多态
