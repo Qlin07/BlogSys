@@ -106,7 +106,7 @@ int main() {
 
 他们通过模板和迭代器解耦，算法不需要知道容器具体是什么
 
-# `vector` 
+# vector 
 
 `std::vector` 本质上是一个**可以自动扩容的连续数组**。它支持随机访问，元素在内存中连续存放。
 
@@ -205,7 +205,7 @@ v.resize(3);      // size = 3，后两个元素被析构
 第一次resize发生了扩容，capacity从0变成了5，size也变成了5。
 第二次resize发生了析构，后两个元素被析构，但是capacity没有减少。
 
-# `list`
+# list
 
 `std::list` 是一个**双向环形链表**。它和 `vector` 完全不同：元素不连续存储，而是分散在内存中的各个节点里，通过指针互相连接。
 
@@ -314,7 +314,7 @@ a.splice(a.end(), b, b.begin(), b.end());
 // 现在 a = {1, 2, 3, 4, 5, 6}，b 为空
 ```
 
-# `map`
+# map
 
 `std::map` 是一个**有序关联容器**，存储的是键值对 `std::pair<const Key, T>`。它的特点是：元素按照键（Key）自动排序，并且不允许重复键。
 
@@ -524,7 +524,7 @@ m.at("Tom");   // key 不存在时抛 std::out_of_range
 
 `multimap` 和 `multiset` 也基于红黑树，但允许重复键。
 
-# `unordered_map`
+# unordered_map
 
 `std::unordered_map` 是一个**无序关联容器**
 存储键值对 `std::pair<const Key, T>`
