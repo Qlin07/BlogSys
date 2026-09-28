@@ -4,7 +4,7 @@ date: 2026-09-21
 summary: 智能指针，unique_ptr/shared_ptr/weak_ptr
 tags:
   - C++
-  - 面向对象
+  - 指针
   - 学习
 series: C++
 order: 7
@@ -28,7 +28,7 @@ void f() {
 
 这段代码看似没问题，但实际上非常脆弱
 
-- 程序如果在中间退出（无论正常或者异常），写在结尾的delete都不会被执行，导致泄露
+- 函数如果在中间退出（无论正常或者异常），写在结尾的delete都不会被执行，导致泄露
 - 如果两个指针指向同一块内存，都去delete，程序会崩溃
 - 函数返回一个裸指针时，调用者不知道：
   - 1.要不要delete
@@ -223,7 +223,7 @@ p.reset(new int(7));  // 释放旧资源，接管新资源
 
 ```C++
 std::unique_ptr<int[]> arr = std::make_unique<int[]>(5); 
-	//这里的意思是创建包含五个智能指针的数组
+	//创建一个包含 5 个'int'的数组
 	//析构时调用delete[]，而不是delete
 arr[0] = 1;
 arr[1] = 2;
@@ -346,6 +346,7 @@ p.reset(new int(7)); // 接管新资源，旧资源计数减一
 `shared_ptr`最大的坑是**循环引用**：
 
 ```C++
+class B; //先声明B类，否则会报错
 class A {
 public:
     std::shared_ptr<B> Bob;
@@ -357,15 +358,13 @@ public:
 };
 
 int main() {
-    std::shared_ptr a = std::make_shared<A>(); //A类计数+1
-    std::shared_ptr b = std::make_shared<B>(); //B类计数+1
+    std::shared_ptr<A> a = std::make_shared<A>(); //A类计数+1
+    std::shared_ptr<B> b = std::make_shared<B>(); //B类计数+1
     
     (*a).Bob = b; //B类计数+1；
     (*b).Alice = a; //A类计数+1；
 }
 ```
-
-![79000810735](C:\Users\23288\AppData\Local\Temp\1790008107355.png)
 
 在离开作用域时，a和b都会销毁。但只会消除a,b的指针，Bob和Alice的互指无法消除
 
@@ -447,7 +446,7 @@ int main() {
 std::shared_ptr<A> a = std::make_shared<A>(); 
 //创建指针对象a，指着A类空间，内部有一个指向B类的Bob指针对象
 //这时这个A类空间被强引用一次
-std::shared_ptr<A> b = std::make_shared<B>(); 
+std::shared_ptr<B> b = std::make_shared<B>(); 
 //创建指针对象b，指着B类空间，内部有一个指向A类的Alice指针对象
 //同理，B类空间被强引用一次
 ```
@@ -531,32 +530,103 @@ wp.reset();      // 让 wp 不再指向任何对象
 
 # 智能指针的选择原则与转换
 
+## 一、选择原则
 
+可以按下面顺序判断：
 
+1. **默认优先用 unique_ptr**
+   如果一块资源只应该有一个所有者，就用 `unique_ptr`。
+   它最轻量、语义最清晰、性能最好。
 
+   ```C++
+   auto p = std::make_unique<Widget>();
+   ```
 
+2. **确实需要共享所有权时，才用 shared_ptr**
+   比如多个对象需要共同维持同一个资源的生命周期，且无法确定谁最后释放。
 
+   ```c++
+   auto sp = std::make_shared<Widget>();
+   std::shared_ptr<Widget> sp2 = sp;
+   ```
 
+3. **只观察、不拥有时，用 weak_ptr**
+   尤其是 `shared_ptr` 出现循环引用时，把其中一方改成 `weak_ptr`。
 
+   ```C++
+   struct Node {
+       std::shared_ptr<Node> next;
+       std::weak_ptr<Node> prev;  // 避免循环引用
+   };
+   ```
 
+4. **函数参数如果不涉及所有权转移，不要传智能指针**
+   只是使用对象时，优先传 `T*` 或 `T&`：
 
+   ```c++
+   void draw(const Widget& w);
+   void draw(const Widget* w);
+   ```
 
+   如果函数要接管所有权，才传 `unique_ptr` 并按值或右值引用：
 
+   ```c++
+   void take(std::unique_ptr<Widget> p);
+   ```
 
+   如果函数要共享所有权，才传 `shared_ptr`：
 
+   ```c++
+   void share(std::shared_ptr<Widget> p);
+   ```
 
+   总之，需要根据实际情况灵活判断
 
+## 二、常见转换关系
 
+三种指针之间可以有转换，总体来讲是向下兼容，部分向上兼容
 
+- `unique_ptr`→`shared_ptr`：通过将`unique_ptr`移动为右值转换
 
+  ```C++
+  std::unique_ptr<Widget> up = std::make_unique<Widget>();
+  std::shared_ptr<Widget> sp = std::move(up);
+  ```
 
+   触发移动语义后up被置空，sp指向原内存
 
+- `shared_ptr` → `unique_ptr`：不可以。
+  因为 `shared_ptr` 可能被多个对象共享，无法确定唯一所有权。
 
+- `shared_ptr` → `weak_ptr`：可以。
 
+  ```C++
+  std::weak_ptr<Widget> wp = sp;
+  ```
 
+- `weak_ptr` → `shared_ptr`：通过 `lock()`。
 
+  ```C++
+  std::shared_ptr<Widget> locked = wp.lock();
+  ```
 
+  `lock()`的功能是**尝试把一个 `weak_ptr` 提升为 `shared_ptr`，返回类型是`shared_ptr`，从而安全地访问它所观察的对象。**因为`weak_ptr`本身不拥有对象，它只是观察者。
 
+  使用lock()后会检查对象是否还存在
 
+  - 如果对象还存在，即至少有一个 `shared_ptr` 拥有它，`lock()` 会返回一个**有效的 `shared_ptr`**，指向同一个对象，并且让强引用计数加一。
 
+  - 如果对象已经被释放，即强引用计数已经为 0，`lock()` 会返回一个**空的 `shared_ptr`**。
 
+  ```C++
+  if (auto sp = wp.lock()) { //通过判断sp是否为空来确认对象是否存在
+      // 对象仍然存在
+  }
+  ```
+
+## 三、常见误用总结
+
+1.不要用同一个裸指针创建多个`shared_ptr`，会导致double free
+2.不要用`shared_ptr::get()`的返回值再创建`shared_ptr`，原因后果同上。
+3.可以独占尽量不要使用`shared_ptr`，会导致额外开销
+4.使用`make_unique` / `make_shared`，避免用new申请。
