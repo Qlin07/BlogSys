@@ -90,7 +90,7 @@ class作为类默认是引用类型，只能通过`(T)name.MemberwiseClone()`方
 
  // 深拷贝（手动）
  Person p3 = new Person {Age = p1.Age, Name = p1.Name, Addr = new Address { City = p1.Addr.City } };
- ```
+```
 
 深拷贝出来的新对象p3和原对象p1没有任何地址上的关联，两者完全独立，所以我将着重说明浅拷贝
 
