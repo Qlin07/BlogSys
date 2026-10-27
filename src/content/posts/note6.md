@@ -1,7 +1,7 @@
 ---
 title: C++智能指针
 date: 2026-09-21
-summary: 智能指针，unique_ptr/shared_ptr/weak_ptr
+summary: 以RAII解决裸指针泄漏，对比独占、共享与弱引用三种智能指针，说明引用计数、循环引用破解与选型转换
 tags:
   - C++
   - 指针

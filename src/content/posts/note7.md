@@ -1,7 +1,7 @@
 ---
 title: C++STL基础
 date: 2026-09-21
-summary: vector,map,unordered_map,list底层
+summary: 梳理STL六大组件与容器分类，剖析vector扩容失效、list的splice，以及map红黑树与哈希容器rehash的差异
 tags:
   - C++
   - STL
